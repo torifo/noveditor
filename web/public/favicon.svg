@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Noveditor">
+  <title>Noveditor</title>
+  <defs>
+    <linearGradient id="kbg" x1="36" y1="16" x2="476" y2="496" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8447F0"></stop><stop offset="0.52" stop-color="#BE1AD0"></stop><stop offset="1" stop-color="#E0444E"></stop>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.28" cy="0.2" r="0.85">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"></stop><stop offset="1" stop-color="#ffffff" stop-opacity="0"></stop>
+    </radialGradient>
+    <linearGradient id="vig" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0.5" stop-color="#1c0626" stop-opacity="0"></stop><stop offset="1" stop-color="#1c0626" stop-opacity="0.3"></stop>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#380d52" flood-opacity="0.42"></feDropShadow>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="114" fill="url(#kbg)"></rect><rect width="512" height="512" rx="114" fill="url(#sheen)"></rect><rect width="512" height="512" rx="114" fill="url(#vig)"></rect>
+  
+    <path d="M202.21 362L113.13 362L113.13 356.56L141.35 342.62L141.35 157.32L113.47 143.04L113.47 137.60L171.95 137.60L303.19 292.64L303.19 156.30L266.47 143.04L266.47 137.60L354.87 137.60L354.87 143.04L326.99 156.64L326.99 363.70L309.31 363.70L165.15 194.38L165.15 342.96L202.21 356.56L202.21 362Z" fill="#FBFAF5" filter="url(#soft)"></path>
+    <path d="M392 196 v140" stroke="#FF7A2F" stroke-width="14" stroke-linecap="round"></path>
+</svg>
