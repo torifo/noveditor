@@ -44,6 +44,54 @@ data class ManuscriptSummary(
 )
 
 /**
+ * JS-friendly mirror of [dev.noveditor.core.model.Novel] for the 連載（小説→話）structure.
+ *
+ * Ids ([id]) are plain `String` (not the `NovelId` value class) and [episodeOrder] is a
+ * `string[]` of episode ids; timestamps are `Double` epoch-millis (a JS `number`). The web
+ * adapter implements `NovelRepository` itself in TypeScript, so only the data shape is exported.
+ */
+@JsExport
+data class Novel(
+    val id: String,
+    val title: String,
+    val synopsis: String,
+    val episodeOrder: Array<String>,
+    val createdAt: Double,
+    val updatedAt: Double,
+)
+
+/**
+ * JS-friendly mirror of [dev.noveditor.core.model.Episode] (string ids, number timestamps).
+ * [novelId] is the parent novel's id as a `String`.
+ */
+@JsExport
+data class Episode(
+    val id: String,
+    val novelId: String,
+    val title: String,
+    val body: String,
+    val createdAt: Double,
+    val updatedAt: Double,
+)
+
+/** JS-friendly mirror of [dev.noveditor.core.model.NovelSummary] (list metadata, no bodies). */
+@JsExport
+data class NovelSummary(
+    val id: String,
+    val title: String,
+    val episodeCount: Int,
+    val updatedAt: Double,
+)
+
+/** JS-friendly mirror of [dev.noveditor.core.model.EpisodeSummary] (list metadata, no body). */
+@JsExport
+data class EpisodeSummary(
+    val id: String,
+    val title: String,
+    val updatedAt: Double,
+)
+
+/**
  * Computes [DocumentStats] for [text]. Thin `@JsExport` wrapper over the pure `commonMain`
  * implementation; counting is code-point based (a surrogate pair counts as one character).
  */
