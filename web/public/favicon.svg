@@ -11,11 +11,18 @@
       <stop offset="0.5" stop-color="#1c0626" stop-opacity="0"></stop><stop offset="1" stop-color="#1c0626" stop-opacity="0.3"></stop>
     </linearGradient>
     <filter id="soft" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#380d52" flood-opacity="0.42"></feDropShadow>
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#380d52" flood-opacity="0.4"></feDropShadow>
     </filter>
   </defs>
   <rect width="512" height="512" rx="114" fill="url(#kbg)"></rect><rect width="512" height="512" rx="114" fill="url(#sheen)"></rect><rect width="512" height="512" rx="114" fill="url(#vig)"></rect>
   
-    <path d="M202.21 362L113.13 362L113.13 356.56L141.35 342.62L141.35 157.32L113.47 143.04L113.47 137.60L171.95 137.60L303.19 292.64L303.19 156.30L266.47 143.04L266.47 137.60L354.87 137.60L354.87 143.04L326.99 156.64L326.99 363.70L309.31 363.70L165.15 194.38L165.15 342.96L202.21 356.56L202.21 362Z" fill="#FBFAF5" filter="url(#soft)"></path>
-    <path d="M392 196 v140" stroke="#FF7A2F" stroke-width="14" stroke-linecap="round"></path>
+  <g filter="url(#soft)">
+    <path d="M256 168 C214 142 168 138 132 146 C124 148 120 154 120 162 L120 352 C120 360 126 366 134 364 C168 357 214 360 256 384 Z" fill="#FBFAF5"></path>
+    <path d="M256 168 C298 142 344 138 380 146 C388 148 392 154 392 162 L392 352 C392 360 386 366 378 364 C344 357 298 360 256 384 Z" fill="#EDE7F5"></path>
+    <path d="M256 168 L256 384" stroke="#CFC6E0" stroke-width="8" stroke-linecap="round"></path>
+  </g>
+  <g stroke="#B9AED2" stroke-width="11" stroke-linecap="round">
+    <path d="M158 196 H226"></path><path d="M158 230 H224"></path><path d="M158 264 H220"></path>
+  </g>
+  <path d="M306 282 v62 l22 -18 l22 18 v-62 z" fill="#FF7A2F"></path>
 </svg>
