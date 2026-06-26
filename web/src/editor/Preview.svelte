@@ -61,6 +61,15 @@
     user-select: none;
   }
 
+  /* Bouten (圏点 / 傍点): sesame-dot emphasis marks above horizontal text.
+     font-style is reset to normal — this is emphasis dots, not italic slant.
+     The vendor-prefixed property carries over to a future 縦書き (vertical) view. */
+  .pv-body :global(em.bouten) {
+    font-style: normal;
+    text-emphasis: filled sesame var(--ink);
+    -webkit-text-emphasis: filled sesame var(--ink);
+  }
+
   .pv-empty {
     font-family: var(--font-serif);
     color: var(--ink-muted);
