@@ -1,0 +1,140 @@
+/*
+ * noveditor — design tokens & base reset
+ * Aesthetic: "a calm editorial writing studio — warm 原稿用紙 (manuscript paper)".
+ * Offline-first: system font stacks only (no external/Google webfonts).
+ */
+
+:root {
+  /* ---- Palette: warm paper canvas, ink text, sparing Kotlin-purple accent ---- */
+  --paper: #f7f4ee; /* warm ivory page background */
+  --surface: #fcfaf6; /* slightly lighter raised surfaces */
+  --surface-sunken: #f2eee6; /* sunken / hover wells */
+  --ink: #23202b; /* primary ink text */
+  --ink-soft: #4a4654; /* secondary text (≈8.3:1 on paper) */
+  --ink-muted: #6b6675; /* tertiary / meta text — darkened for ≥4.5:1 on paper (≈5.0:1) */
+  --line: #e6e0d6; /* hairline warm border */
+  --line-strong: #d8d1c4;
+
+  --accent: #7f52ff; /* brand Kotlin purple — used sparingly */
+  --accent-strong: #6a3df0;
+  --accent-wash: #f0ebff; /* faint accent tint for active item only */
+  --accent-contrast: #ffffff;
+
+  --ok: #2f9e6f; /* save success */
+  --warn: #c9831f; /* dirty / unsaved */
+  --danger: #c0473a; /* error / delete */
+
+  /* ---- Typography ---- */
+  /* Manuscript body — the signature Mincho serif */
+  --font-serif: 'Hiragino Mincho ProN', 'Yu Mincho', 'YuMincho', 'Noto Serif JP',
+    'Source Han Serif JP', serif;
+  /* UI chrome — clean gothic */
+  --font-sans: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'YuGothic', 'Noto Sans JP',
+    system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --reading-measure: 40rem; /* centered editing column cap */
+  --body-line-height: 1.9;
+
+  /* ---- Spacing scale (4px base) ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* ---- Radii ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* ---- Shadows: soft, low, warm ---- */
+  --shadow-sm: 0 1px 2px rgba(35, 32, 43, 0.05);
+  --shadow-md: 0 6px 20px rgba(35, 32, 43, 0.08);
+  --shadow-lg: 0 18px 48px rgba(35, 32, 43, 0.16);
+
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  --header-h: 3.25rem;
+}
+
+/* ---- Light base reset ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+figure {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Consistent keyboard focus ring across every interactive element (brand purple, small offset). */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Page-load fade/stagger (one tasteful entrance, respects reduced-motion) */
+@keyframes nv-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nv-enter {
+  animation: nv-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

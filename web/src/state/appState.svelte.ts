@@ -28,6 +28,23 @@ export class AppState {
   saveStatus = $state<SaveStatus>('idle')
   errorMessage = $state<string | null>(null)
 
+  // Undoable delete: a non-blocking toast offers "元に戻す" for ~5s. The deleted manuscript is
+  // kept in memory (`deletedBackup`) until the toast is dismissed (auto or manual), at which
+  // point the deletion becomes final. Undo re-`save()`s the snapshot via the repository.
+  toast = $state<{ message: string } | null>(null)
+  private deletedBackup: Manuscript | null = null
+
+  // Focus coordination: bumping `focusSignal` asks the editor to focus `focusTarget`
+  // (so the user can start writing immediately after creating/switching manuscripts).
+  focusSignal = $state(0)
+  focusTarget = $state<'title' | 'body'>('body')
+
+  /** Ask the editor to move focus to the title or body on the next tick. */
+  requestFocus(target: 'title' | 'body'): void {
+    this.focusTarget = target
+    this.focusSignal++
+  }
+
   private readonly repo: ManuscriptRepository
   private readonly autosaver = new Debouncer(AUTOSAVE_DELAY_MS, () => {
     void this.saveNow()
@@ -103,6 +120,8 @@ export class AppState {
   async createNew(): Promise<void> {
     await this.persistPending()
     this.resetBuffer()
+    // Fresh buffer is untitled — focus the title so the user can name & write at once.
+    this.requestFocus('title')
   }
 
   /** Switch to another manuscript: autosave current first, then load the selected one. */
@@ -130,13 +149,25 @@ export class AppState {
       this.body = m.body
       this.saveStatus = 'idle'
       this.errorMessage = null
+      // Drop into the body to keep writing; if it's still untitled, name it first.
+      this.requestFocus(this.title.trim().length > 0 ? 'body' : 'title')
     } catch (e) {
       this.fail('原稿の読み込みに失敗しました', e)
     }
   }
 
-  /** Delete a manuscript; if it was the current one, move to the latest remaining (or empty). */
+  /**
+   * Delete a manuscript; if it was the current one, move to the latest remaining (or empty).
+   * Snapshots the manuscript first and surfaces a non-blocking undo toast (no native confirm).
+   */
   async remove(id: string): Promise<void> {
+    // Snapshot before deletion so an Undo can re-persist the exact manuscript.
+    let backup: Manuscript | null = null
+    try {
+      backup = await this.repo.load(id)
+    } catch {
+      backup = null
+    }
     try {
       await this.repo.delete(id)
     } catch (e) {
@@ -154,6 +185,33 @@ export class AppState {
         this.resetBuffer()
       }
     }
+    // One toast at a time — a new deletion finalizes any previous undo offer.
+    if (backup) {
+      this.deletedBackup = backup
+      const t = backup.title.trim().length > 0 ? backup.title : '（無題）'
+      this.toast = { message: `「${t}」を削除しました` }
+    }
+  }
+
+  /** Restore the last deleted manuscript (re-`save()` the snapshot) and re-select it. */
+  async undoDelete(): Promise<void> {
+    const backup = this.deletedBackup
+    if (backup === null) return
+    this.deletedBackup = null
+    this.toast = null
+    try {
+      await this.repo.save(backup)
+      await this.refreshList()
+      await this.loadInto(backup.id)
+    } catch (e) {
+      this.fail('元に戻せませんでした', e)
+    }
+  }
+
+  /** Dismiss the undo toast; the deletion becomes final and the snapshot is dropped. */
+  dismissToast(): void {
+    this.deletedBackup = null
+    this.toast = null
   }
 
   private async loadInto(id: string): Promise<void> {
