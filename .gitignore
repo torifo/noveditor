@@ -1,0 +1,39 @@
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- IDE / Editor ---
+.idea/
+*.iml
+*.iws
+.vscode/
+out/
+
+# --- Gradle / Kotlin (core, android) ---
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+local.properties
+.kotlin/
+
+# --- Android ---
+*.apk
+*.aab
+*.ap_
+*.dex
+.cxx/
+captures/
+release/
+
+# --- Node / Vite / Svelte (web) ---
+node_modules/
+dist/
+.vite/
+*.local
+.svelte-kit/
+
+# --- Logs / misc ---
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
