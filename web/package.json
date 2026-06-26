@@ -10,6 +10,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "noveditor-core": "link:../core/build/dist/js/productionLibrary",
     "svelte": "^5.0.0",
     "vite-plugin-pwa": "^0.21.0"
   },

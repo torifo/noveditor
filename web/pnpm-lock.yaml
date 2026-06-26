@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      noveditor-core:
+        specifier: link:../core/build/dist/js/productionLibrary
+        version: link:../core/build/dist/js/productionLibrary
       svelte:
         specifier: ^5.0.0
         version: 5.56.4
