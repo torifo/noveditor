@@ -69,6 +69,70 @@
     await app.updateNovelMeta(id, editTitle, editSynopsis)
     editingNovelId = null
   }
+
+  // ---- Drag-and-drop episode reorder ----
+  // dragFromIndex: index of the episode currently being dragged (null when idle)
+  // dropTargetIndex: insertion slot (0..episodes.length) where the drop line is shown
+  let dragFromIndex = $state<number | null>(null)
+  let dropTargetIndex = $state<number | null>(null)
+
+  function handleDragStart(e: DragEvent, index: number): void {
+    dragFromIndex = index
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move'
+      // Store the source index so accidental cross-novel drops can be ignored.
+      e.dataTransfer.setData('text/plain', String(index))
+    }
+  }
+
+  /** Calculate the insertion slot (before/after the hovered element) from pointer position. */
+  function calcSlot(e: DragEvent, index: number): number {
+    const el = e.currentTarget as HTMLElement
+    const rect = el.getBoundingClientRect()
+    return e.clientY < rect.top + rect.height / 2 ? index : index + 1
+  }
+
+  function handleEpDragOver(e: DragEvent, index: number): void {
+    e.preventDefault()
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+    const slot = calcSlot(e, index)
+    // Suppress the indicator when dropping would be a no-op (on itself or adjacent slot).
+    if (dragFromIndex !== null && (slot === dragFromIndex || slot === dragFromIndex + 1)) {
+      dropTargetIndex = null
+      return
+    }
+    dropTargetIndex = slot
+  }
+
+  function handleEpDrop(e: DragEvent, index: number): void {
+    e.preventDefault()
+    const from = dragFromIndex
+    const slot = calcSlot(e, index)
+    // Clear drag state immediately so the UI snaps back while the async save runs.
+    dragFromIndex = null
+    dropTargetIndex = null
+    if (from === null) return
+    // No-op: dropped on the same position.
+    if (slot === from || slot === from + 1) return
+    // Convert insertion slot to final element index after splice.
+    // When the slot is after the source, removing the source shifts indices by -1.
+    const to = slot > from ? slot - 1 : slot
+    const nid = app.currentNovelId
+    if (nid !== null) void app.reorderEpisode(nid, from, to)
+  }
+
+  function handleDragEnd(): void {
+    dragFromIndex = null
+    dropTargetIndex = null
+  }
+
+  /** Clear the drop indicator when the pointer leaves the episode list entirely. */
+  function handleListDragLeave(e: DragEvent): void {
+    const rel = e.relatedTarget as Node | null
+    if (!rel || !(e.currentTarget as HTMLElement).contains(rel)) {
+      dropTargetIndex = null
+    }
+  }
 </script>
 
 <aside class="list">
@@ -151,9 +215,35 @@
           {/if}
 
           {#if active && !single}
-            <ul class="episodes">
+            <ul
+              class="episodes"
+              ondragleave={handleListDragLeave}
+              ondragover={(e) => e.preventDefault()}
+            >
               {#each app.episodes as e, i (e.id)}
-                <li class="episode" class:active={e.id === app.currentEpisodeId}>
+                <li
+                  class="episode"
+                  class:active={e.id === app.currentEpisodeId}
+                  class:ep-dragging={dragFromIndex === i}
+                  class:drop-above={dropTargetIndex === i}
+                  class:drop-below={dropTargetIndex === app.episodes.length && i === app.episodes.length - 1}
+                  draggable={true}
+                  ondragstart={(ev) => handleDragStart(ev, i)}
+                  ondragover={(ev) => handleEpDragOver(ev, i)}
+                  ondrop={(ev) => handleEpDrop(ev, i)}
+                  ondragend={handleDragEnd}
+                  aria-grabbed={dragFromIndex === i ? 'true' : 'false'}
+                >
+                  <span class="drag-handle" aria-hidden="true" title="ドラッグして並べ替え">
+                    <svg viewBox="0 0 8 14" width="8" height="14" fill="currentColor" aria-hidden="true">
+                      <circle cx="2" cy="2" r="1.1"/>
+                      <circle cx="6" cy="2" r="1.1"/>
+                      <circle cx="2" cy="7" r="1.1"/>
+                      <circle cx="6" cy="7" r="1.1"/>
+                      <circle cx="2" cy="12" r="1.1"/>
+                      <circle cx="6" cy="12" r="1.1"/>
+                    </svg>
+                  </span>
                   <button class="open ep-open" onclick={() => onOpenEpisode(e.id)}>
                     <span class="num" aria-hidden="true">{i + 1}</span>
                     <span class="ep-body">
@@ -507,10 +597,74 @@
     padding: var(--space-2);
   }
 
+  /* ---- Drag-and-drop affordance ---- */
+  .drag-handle {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 1rem;
+    padding-left: 0.15rem;
+    color: var(--ink-muted);
+    opacity: 0;
+    cursor: grab;
+    transition: opacity 0.18s ease;
+    /* Avoid interfering with the adjacent ep-open button's click area. */
+    pointer-events: auto;
+  }
+  .episode:hover .drag-handle,
+  .episode.active .drag-handle {
+    opacity: 0.45;
+  }
+  .drag-handle:hover {
+    opacity: 0.9;
+  }
+
+  /* Dim the episode row being dragged. */
+  .episode.ep-dragging {
+    opacity: 0.35;
+  }
+
+  /* Drop indicator: a 2px accent line above (.drop-above) or below (.drop-below). */
+  .episode.drop-above,
+  .episode.drop-below {
+    position: relative;
+  }
+  .episode.drop-above::before,
+  .episode.drop-below::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+    border-radius: var(--radius-pill);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .episode.drop-above::before {
+    top: -1px;
+  }
+  .episode.drop-below::after {
+    bottom: -1px;
+  }
+
+  /* Respect reduced-motion: skip transitions during drag interactions. */
+  @media (prefers-reduced-motion: reduce) {
+    .episode,
+    .drag-handle {
+      transition: none;
+    }
+  }
+
   /* Touch devices have no hover — always reveal actions. */
   @media (hover: none) {
     .act {
       opacity: 0.6;
+    }
+    /* On touch, drag-and-drop (HTML5) is not supported; show the handle faintly
+       so the ↑/↓ buttons remain the primary reorder mechanism. */
+    .drag-handle {
+      display: none;
     }
   }
 </style>

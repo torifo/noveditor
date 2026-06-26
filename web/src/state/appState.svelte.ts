@@ -374,6 +374,37 @@ export class AppState {
     }
   }
 
+  /**
+   * Reorder a 話 by absolute indices within its novel and persist the new order.
+   * Used by drag-and-drop. `fromIndex` and `toIndex` are positions in `episodeOrder`
+   * after the splice-and-insert: the element is removed from `fromIndex` first, then
+   * inserted at `toIndex` in the resulting array.
+   */
+  async reorderEpisode(novelId: string, fromIndex: number, toIndex: number): Promise<void> {
+    if (fromIndex === toIndex) return
+    try {
+      const novel = await this.repo.loadNovel(novelId)
+      if (novel === null) return
+      const order = [...novel.episodeOrder]
+      if (fromIndex < 0 || fromIndex >= order.length || toIndex < 0 || toIndex >= order.length) return
+      const [moved] = order.splice(fromIndex, 1)
+      order.splice(toIndex, 0, moved)
+      const next = new Novel(
+        novel.id,
+        novel.title,
+        novel.synopsis,
+        order,
+        novel.createdAt,
+        Date.now(),
+      )
+      await this.repo.saveNovel(next)
+      await this.refreshNovels()
+      await this.refreshEpisodes(novelId)
+    } catch (e) {
+      this.fail('並べ替えに失敗しました', e)
+    }
+  }
+
   // ---- Novel meta editing ----
 
   /** Fetch a novel's editable meta (title + synopsis), reading the body for non-current novels. */
