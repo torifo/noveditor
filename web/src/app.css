@@ -32,7 +32,8 @@
   --font-sans: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'YuGothic', 'Noto Sans JP',
     system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --reading-measure: 40rem; /* centered editing column cap */
+  --reading-measure: 40rem; /* centered editing column cap (overridable via settings) */
+  --editor-font-size: 18px; /* editor body size (overridable via settings, 15–22px) */
   --body-line-height: 1.9;
 
   /* ---- Spacing scale (4px base) ---- */
@@ -59,6 +60,62 @@
   --focus-ring-offset: 2px;
 
   --header-h: 3.25rem;
+}
+
+/*
+ * ---- Sepia theme: warm 原稿用紙 paper + dark warm-brown ink ----
+ * All text tokens verified ≥4.5:1 on their surfaces (see header report).
+ */
+[data-theme='sepia'] {
+  --paper: #f3ead8;
+  --surface: #f7f0e1;
+  --surface-sunken: #ebdfc8;
+  --ink: #3a2e20; /* ≈11.5:1 on paper */
+  --ink-soft: #5b4a37; /* ≈6.9:1 on paper */
+  --ink-muted: #6f5c45; /* ≈5.1:1 on paper */
+  --line: #e2d6bf;
+  --line-strong: #d4c5a8;
+
+  --accent: #6e44e8; /* deepened so purple text stays legible on warm paper */
+  --accent-strong: #5a32cf; /* ≈5.6:1 on paper */
+  --accent-wash: #e8dcf3;
+  --accent-contrast: #ffffff;
+
+  --ok: #2f8a63;
+  --warn: #a06d18;
+  --danger: #b3433a;
+
+  --shadow-sm: 0 1px 2px rgba(58, 46, 32, 0.06);
+  --shadow-md: 0 6px 20px rgba(58, 46, 32, 0.1);
+  --shadow-lg: 0 18px 48px rgba(58, 46, 32, 0.18);
+}
+
+/*
+ * ---- Dark theme: desaturated warm near-black surfaces + light warm ink ----
+ * Purple accent lightened for contrast; all text tokens verified ≥4.5:1.
+ */
+[data-theme='dark'] {
+  --paper: #1a1916;
+  --surface: #232220;
+  --surface-sunken: #2c2a26;
+  --ink: #ece7df; /* ≈13.9:1 on paper */
+  --ink-soft: #c5beb1; /* ≈9.6:1 on paper */
+  --ink-muted: #9c9488; /* ≈5.4:1 on paper */
+  --line: #34322d;
+  --line-strong: #423f39;
+
+  --accent: #b29dff; /* light purple — ≈7.7:1 on paper */
+  --accent-strong: #c8baff; /* brighter for active text — ≈9.8:1 */
+  --accent-wash: #2a2542;
+  --accent-contrast: #1a1916; /* dark ink on the light-purple accent fill */
+
+  --ok: #4cc090;
+  --warn: #e0a44a;
+  --danger: #e8786b;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.55);
 }
 
 /* ---- Light base reset ---- */

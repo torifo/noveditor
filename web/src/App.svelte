@@ -1,9 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { AppState } from './state/appState.svelte'
+  import type { Settings } from './state/settings.svelte'
   import Editor from './editor/Editor.svelte'
   import ManuscriptList from './list/ManuscriptList.svelte'
+  import SettingsPanel from './ui/SettingsPanel.svelte'
   import Toast from './ui/Toast.svelte'
+
+  let { settings }: { settings: Settings } = $props()
 
   const app = new AppState()
 
@@ -13,9 +17,14 @@
   onMount(() => {
     void app.init()
 
-    // Global keyboard shortcuts: Cmd/Ctrl+S saves, Cmd/Ctrl+N starts a new manuscript.
-    // Both block the browser default.
+    // Global keyboard shortcuts:
+    //   Cmd/Ctrl+S  → save,  Cmd/Ctrl+N → new manuscript,  Cmd/Ctrl+\ → toggle 集中モード.
+    //   Esc (when in focus mode) exits it. All block the browser default where relevant.
     function onKeydown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && settings.focusMode) {
+        settings.exitFocusMode()
+        return
+      }
       if (!(e.metaKey || e.ctrlKey) || e.altKey) return
       if (e.key === 's' || e.key === 'S') {
         e.preventDefault()
@@ -23,6 +32,9 @@
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault()
         void app.createNew()
+      } else if (e.key === '\\') {
+        e.preventDefault()
+        settings.toggleFocusMode()
       }
     }
     window.addEventListener('keydown', onKeydown)
@@ -35,7 +47,7 @@
   }
 </script>
 
-<div class="app">
+<div class="app" class:focus-mode={settings.focusMode}>
   <header class="app-header nv-enter" style="--nv-delay: 0ms">
     <button
       class="nav-toggle"
@@ -56,8 +68,29 @@
 
     <h1 class="wordmark">
       <img class="mark" src="/favicon.svg" alt="" width="28" height="28" />
-      <span class="word">nov<span class="cap">E</span>ditor</span>
+      <span class="word">ノヴェディタ</span>
     </h1>
+
+    <div class="header-tools">
+      <button
+        class="tool-btn"
+        aria-label="集中モード"
+        aria-pressed={settings.focusMode}
+        title="集中モード (⌘\)"
+        onclick={() => settings.toggleFocusMode()}
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+      <SettingsPanel {settings} />
+    </div>
   </header>
 
   <div class="layout">
@@ -71,9 +104,24 @@
     </div>
 
     <main class="main nv-enter" style="--nv-delay: 120ms">
-      <Editor {app} />
+      <Editor {app} {settings} />
     </main>
   </div>
+
+  {#if settings.focusMode}
+    <button class="focus-exit" title="集中モードを終了 (Esc)" onclick={() => settings.exitFocusMode()}>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path
+          d="M9 5 5 9m0-4 4 4M15 5l4 4m0-4-4 4M9 19l-4-4m0 4 4-4M15 19l4-4m0 4-4-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+        />
+      </svg>
+      <span>集中モードを終了</span>
+    </button>
+  {/if}
 
   <Toast {app} />
 </div>
@@ -115,16 +163,11 @@
     /* favicon.svg already carries its own rounded corners + soft shadow */
   }
   .word {
-    font-family: 'Avenir Next', 'Futura', 'Century Gothic', 'Segoe UI',
-      ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
     font-weight: 600;
-    font-size: 1.2rem;
-    letter-spacing: 0.005em;
+    font-size: 1.25rem;
+    letter-spacing: 0.08em;
     color: var(--ink);
-  }
-  .cap {
-    color: var(--accent);
-    font-weight: 700;
   }
 
   .nav-toggle {
@@ -140,6 +183,71 @@
   }
   .nav-toggle:hover {
     background: var(--surface-sunken);
+  }
+
+  /* Right-aligned header controls: 集中モード toggle + 設定 gear. */
+  .header-tools {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink-soft);
+    transition:
+      background 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease;
+  }
+  .tool-btn:hover {
+    background: var(--surface-sunken);
+    color: var(--ink);
+  }
+  .tool-btn[aria-pressed='true'] {
+    border-color: var(--accent);
+    color: var(--accent-strong);
+    background: var(--accent-wash);
+  }
+
+  /* ---- 集中モード (focus mode): hide all chrome, leave only the paper ---- */
+  .app.focus-mode .app-header,
+  .app.focus-mode .sidebar {
+    display: none;
+  }
+
+  /* Faint floating exit affordance, bottom-right. */
+  .focus-exit {
+    position: fixed;
+    right: var(--space-5);
+    bottom: var(--space-5);
+    z-index: 45;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--ink-muted);
+    font-size: 0.78rem;
+    box-shadow: var(--shadow-md);
+    opacity: 0.45;
+    transition:
+      opacity 0.2s ease,
+      color 0.2s ease;
+  }
+  .focus-exit:hover,
+  .focus-exit:focus-visible {
+    opacity: 1;
+    color: var(--ink);
   }
 
   .layout {
