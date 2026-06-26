@@ -391,9 +391,11 @@
     color: var(--ink-muted);
     font-weight: 400;
   }
-  /* Pointer focus: a calm accent underline. Keyboard focus additionally gets the global ring. */
-  .title:focus {
+  /* Calm accent underline on focus (pointer and keyboard); no box ring on the writing fields. */
+  .title:focus,
+  .title:focus-visible {
     border-bottom-color: var(--accent);
+    outline: none;
   }
 
   .body {
