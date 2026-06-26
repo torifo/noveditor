@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Noveditor maskable icon">
+  <!-- Maskable variant of app-icon.svg: same artwork, but the document is scaled into the
+       central safe zone (~80%) so launchers that crop to a circle/squircle never clip it.
+       The Kotlin-gradient background is full-bleed so the cropped corners stay on-brand. -->
+  <defs>
+    <linearGradient id="kotlin-bg" x1="74" y1="36" x2="450" y2="470" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7f52ff"/>
+      <stop offset="0.48" stop-color="#c711e1"/>
+      <stop offset="1" stop-color="#e44857"/>
+    </linearGradient>
+    <linearGradient id="page" x1="132" y1="86" x2="374" y2="428" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fffdf8"/>
+      <stop offset="1" stop-color="#f0edf8"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="304" y1="92" x2="392" y2="178" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e3dcf6"/>
+      <stop offset="1" stop-color="#cfc4f1"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#2f166f" flood-opacity="0.32"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#kotlin-bg)"/>
+  <path d="M0 512 512 0v512H0Z" fill="#181824" opacity="0.16"/>
+  <path d="M0 392 392 0h120v80L80 512H0Z" fill="#ffffff" opacity="0.08"/>
+
+  <!-- Document scaled to 0.8 around the icon center → fits the maskable safe zone. -->
+  <g transform="translate(256 256) scale(0.8) translate(-256 -256)">
+    <g filter="url(#shadow)">
+      <path d="M139 82h178l67 70v270c0 18-14 32-32 32H139c-18 0-32-14-32-32V114c0-18 14-32 32-32Z" fill="url(#page)"/>
+      <path d="M316 83v54c0 11 9 20 20 20h48" fill="url(#fold)"/>
+      <path d="M316 83v54c0 11 9 20 20 20h48" fill="none" stroke="#b9aee6" stroke-width="7" stroke-linejoin="round"/>
+      <rect x="152" y="137" width="188" height="34" rx="17" fill="#e5dcff"/>
+      <path d="M174 154h82M280 154h31" fill="none" stroke="#7f52ff" stroke-width="12" stroke-linecap="round" opacity="0.38"/>
+      <rect x="150" y="198" width="204" height="149" rx="24" fill="#24243a"/>
+      <path d="M178 236h54M178 275h84M178 314h62" fill="none" stroke="#bcaeff" stroke-width="13" stroke-linecap="round"/>
+      <path d="M286 227v97" fill="none" stroke="#ff8d00" stroke-width="10" stroke-linecap="round"/>
+      <path d="M271 227h30M271 324h30" fill="none" stroke="#ff8d00" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="286" cy="278" r="7" fill="#c711e1"/>
+      <text x="252" y="401" fill="#24243a" font-family="'Avenir Next Condensed', 'Avenir Next', Avenir, sans-serif" font-size="68" font-weight="900" letter-spacing="0.5" text-anchor="middle">Novel</text>
+    </g>
+    <path d="M126 474h260" fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" opacity="0.34"/>
+  </g>
+</svg>
