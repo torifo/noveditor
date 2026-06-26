@@ -55,8 +55,8 @@
     </button>
 
     <h1 class="wordmark">
-      <span class="mark" aria-hidden="true">N</span>
-      <span class="word">noveditor</span>
+      <img class="mark" src="/favicon.svg" alt="" width="28" height="28" />
+      <span class="word">nov<span class="cap">E</span>ditor</span>
     </h1>
   </header>
 
@@ -108,23 +108,23 @@
     user-select: none;
   }
   .mark {
-    display: grid;
-    place-items: center;
     width: 1.75rem;
     height: 1.75rem;
-    border-radius: var(--radius-sm);
-    background: var(--accent);
-    color: var(--accent-contrast);
-    font-weight: 700;
-    font-size: 1.05rem;
-    line-height: 1;
-    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+    display: block;
+    /* favicon.svg already carries its own rounded corners + soft shadow */
   }
   .word {
+    font-family: 'Avenir Next', 'Futura', 'Century Gothic', 'Segoe UI',
+      ui-sans-serif, system-ui, sans-serif;
     font-weight: 600;
-    font-size: 1.05rem;
-    letter-spacing: 0.01em;
+    font-size: 1.2rem;
+    letter-spacing: 0.005em;
     color: var(--ink);
+  }
+  .cap {
+    color: var(--accent);
+    font-weight: 700;
   }
 
   .nav-toggle {
