@@ -3,7 +3,7 @@
   import { AppState } from './state/appState.svelte'
   import type { Settings } from './state/settings.svelte'
   import Editor from './editor/Editor.svelte'
-  import ManuscriptList from './list/ManuscriptList.svelte'
+  import NovelList from './list/NovelList.svelte'
   import SettingsPanel from './ui/SettingsPanel.svelte'
   import Toast from './ui/Toast.svelte'
 
@@ -18,7 +18,7 @@
     void app.init()
 
     // Global keyboard shortcuts:
-    //   Cmd/Ctrl+S  → save,  Cmd/Ctrl+N → new manuscript,  Cmd/Ctrl+\ → toggle 集中モード.
+    //   Cmd/Ctrl+S  → save,  Cmd/Ctrl+N → new 話 (within current novel),  Cmd/Ctrl+\ → toggle 集中モード.
     //   Esc (when in focus mode) exits it. All block the browser default where relevant.
     function onKeydown(e: KeyboardEvent) {
       if (e.key === 'Escape' && settings.focusMode) {
@@ -31,7 +31,7 @@
         void app.saveNow()
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault()
-        void app.createNew()
+        void app.createEpisode()
       } else if (e.key === '\\') {
         e.preventDefault()
         settings.toggleFocusMode()
@@ -51,7 +51,7 @@
   <header class="app-header nv-enter" style="--nv-delay: 0ms">
     <button
       class="nav-toggle"
-      aria-label={sidebarOpen ? '原稿一覧を閉じる' : '原稿一覧を開く'}
+      aria-label={sidebarOpen ? '小説一覧を閉じる' : '小説一覧を開く'}
       aria-expanded={sidebarOpen}
       onclick={() => (sidebarOpen = !sidebarOpen)}
     >
@@ -100,7 +100,7 @@
     {/if}
 
     <div class="sidebar nv-enter" class:open={sidebarOpen} style="--nv-delay: 60ms">
-      <ManuscriptList {app} onNavigate={closeSidebar} />
+      <NovelList {app} onNavigate={closeSidebar} />
     </div>
 
     <main class="main nv-enter" style="--nv-delay: 120ms">

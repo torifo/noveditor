@@ -48,10 +48,10 @@
     stats = countStats(text)
   })
 
-  // Re-baseline the session counter when the manuscript changes (untrack body so typing doesn't
+  // Re-baseline the session counter when the 話(episode) changes (untrack body so typing doesn't
   // reset it — only an id change matters).
   $effect(() => {
-    const id = app.currentId
+    const id = app.currentEpisodeId
     if (id === baselineId) return
     baselineId = id
     sessionBaseline = untrack(() => countStats(app.body).charCount)
@@ -69,13 +69,13 @@
     })
   })
 
-  // ---- Per-manuscript caret/scroll position memory ----
-  // Restore on open/switch. New manuscripts have no saved position, so they naturally start at
+  // ---- Per-話(episode) caret/scroll position memory ----
+  // Restore on open/switch. New episodes have no saved position, so they naturally start at
   // top (never fighting the focus-on-new behavior). rAF runs after the focus microtask, so the
   // restored caret/scroll is the final word.
   let restoredId: string | null = null
   $effect(() => {
-    const id = app.currentId
+    const id = app.currentEpisodeId
     if (id === restoredId) return
     restoredId = id
     if (id === null) return
@@ -94,7 +94,7 @@
   })
 
   function persistPos(): void {
-    const id = app.currentId
+    const id = app.currentEpisodeId
     const el = bodyEl
     if (!id || !el) return
     savePos(id, {
@@ -125,20 +125,25 @@
     }
   })
 
-  // Empty-state CTA: shown only while no manuscripts exist and the writer hasn't started.
+  // Empty-state CTA: shown only while no novels exist and the writer hasn't started.
   let started = $state(false)
   // Plain (non-reactive) tracker so we can detect a >0 -> 0 transition without an effect loop.
   let prevCount = 0
   $effect(() => {
-    const count = app.summaries.length
+    const count = app.novels.length
     if (count === 0 && prevCount > 0) started = false
     prevCount = count
   })
-  const showEmpty = $derived(app.summaries.length === 0 && !started)
+  const showEmpty = $derived(app.novels.length === 0 && !started)
+
+  // Breadcrumb: 小説名 › 話タイトル — the current location.
+  const novelLabel = $derived(app.novelTitle.trim().length > 0 ? app.novelTitle : '（無題の小説）')
+  const episodeLabel = $derived(app.title.trim().length > 0 ? app.title : '（無題）')
 
   function beginFirstDraft() {
     started = true
-    app.requestFocus('title')
+    // First novel: create it (with its first 話) and drop the writer into the title.
+    void app.createNovel()
   }
 
   function onEdited() {
@@ -184,13 +189,20 @@
   {#if showEmpty}
     <div class="empty-state nv-enter">
       <div class="mark" aria-hidden="true">N</div>
-      <h2>最初の原稿を始めましょう</h2>
-      <p>静かな紙の上で、思いついた一行から書き始められます。</p>
-      <button class="cta" onclick={beginFirstDraft}>最初の原稿を始める</button>
+      <h2>最初の小説を始めましょう</h2>
+      <p>静かな紙の上で、思いついた一行から書き始められます。一話完結でも、連載でも。</p>
+      <button class="cta" onclick={beginFirstDraft}>最初の小説を始める</button>
     </div>
   {:else}
     {#if !settings.focusMode}
       <div class="toolbar">
+        {#if app.hasEpisode}
+          <nav class="breadcrumb" aria-label="現在地">
+            <span class="crumb novel" title={novelLabel}>{novelLabel}</span>
+            <span class="sep" aria-hidden="true">›</span>
+            <span class="crumb episode" title={episodeLabel}>{episodeLabel}</span>
+          </nav>
+        {/if}
         <div class="mode-toggle" role="group" aria-label="表示モード">
           <button
             class:active={mode === 'edit'}
@@ -213,8 +225,8 @@
         <input
           class="title"
           type="text"
-          placeholder="無題"
-          aria-label="タイトル"
+          placeholder="話タイトル"
+          aria-label="話タイトル"
           bind:this={titleEl}
           bind:value={app.title}
           oninput={onEdited}
@@ -283,12 +295,42 @@
   /* ---- Top toolbar: 編集 ⇄ プレビュー toggle ---- */
   .toolbar {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
     width: 100%;
     max-width: calc(var(--reading-measure) + var(--space-6) * 2);
     margin: 0 auto;
     padding: var(--space-3) var(--space-6) 0;
     box-sizing: border-box;
+  }
+
+  /* ---- Breadcrumb: 小説名 › 話タイトル (current location) ---- */
+  .breadcrumb {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    min-width: 0;
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+  }
+  .breadcrumb .crumb {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 14ch;
+  }
+  .breadcrumb .crumb.novel {
+    color: var(--ink-soft);
+  }
+  .breadcrumb .crumb.episode {
+    color: var(--accent-strong);
+    font-weight: 500;
+    max-width: 18ch;
+  }
+  .breadcrumb .sep {
+    color: var(--ink-muted);
+    flex-shrink: 0;
   }
   .mode-toggle {
     display: inline-flex;
