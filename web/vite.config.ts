@@ -18,8 +18,8 @@ export default defineConfig({
         description: '小説・ライトノベル執筆エディタ（MVP）', // 仮
         lang: 'ja',
         display: 'standalone',
-        theme_color: '#2b2b33', // 仮
-        background_color: '#2b2b33', // 仮
+        theme_color: '#7f52ff',
+        background_color: '#7f52ff',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
