@@ -130,7 +130,7 @@
 
 > 海外（iA Writer / Ulysses / Scrivener / Typora 等）・日本語小説ツール（Nola / TATEditor / 縦式 / Hakogaki / でんでん 等）・執筆UXパターンを横断調査し、「落ち着いた原稿用紙・オフライン・私的」という方針で取捨選択した結果。
 
-### 最初のリリースに追加（クイックウィン＋シグネチャ）
+### 最初のリリースに追加（実装済み — クイックウィン＋シグネチャ）
 - 原稿用紙換算（枚数 = ⌈字数/400⌉ を併記）
 - スクロール/カーソル位置の記憶（原稿ごと）
 - 集中モード（⌘\ で chrome 非表示）
@@ -144,19 +144,22 @@
 - 約物整形 lint（`……`/`――` の2個1組、全角/半角、`！？`連続、句読点統一、禁則）
 - 傍点 `《《…》》` → `text-emphasis`
 - Find & Replace（⌘F・原稿横断）
-- 章・話・エピソード構造（複数原稿の階層化）
+- **小説→話（連載）構造**：一話完結でない小説を 小説(Novel)→話(Episode) の階層で管理（カクヨム／なろう参考。詳細 [specs/novel-episodes/](../specs/novel-episodes/design.md)）
 - フォーカス減光（段落以外を淡色化・任意ON）
 - 原稿ごとの字数目標／読了時間目安
 - 投稿サイト向けエクスポート（なろう/カクヨム記法・txt）
 
 ### v1.x（育てる）
-- 縦書きプレビュー（read-only・`writing-mode: vertical-rl`／縦中横は `tate-chu-yoko` 系）
+- **縦書き・書籍化（PDF/印刷）＝ [tatemd](https://github.com/torifonium/tatemd) 連携で提供**（縦書き組版・禁則・A5/B6 書籍 PDF・絵巻長尺は tatemd を npm ライブラリ化して組み込み。**縦書き/組版は自前実装しない**。tatemd 側の embeddable 化 issue を起票して進める）
 - 版履歴スナップショット（IndexedDB・差分・復元）
 - キャラクター設定・あらすじ/プロットメモ（Nola 型）
 - 穏やかな日次記録（「今週◯日書いた」程度・罰則なし）
 - ⌘K コマンドパレット / 原稿クイック切替
 - 文章分析（セリフ比率・文長・漢字率）
-- EPUB 縦書き出力
+- EPUB 等の書籍化出力（tatemd 連携の発展）
+
+### 外部連携方針
+- **縦書き・組版・書籍化 PDF は [tatemd](https://github.com/torifonium/tatemd)（自作 OSS・MIT）に委譲**する。tatemd は 3 ティア（Web/拡張/CLI）が同一 `core` を共有する設計で、npm ライブラリ化すれば noveditor から縦書きレンダラ＋書籍 PDF を二重実装なしに利用できる。tatemd 側の「他サービスから組み込めるようにする」issue（npm 公開・browser ESM エントリ・縦書き CSS 配布・Web Component・埋め込み例）を起票して連携を実現する。
 
 ### あえて入れない（calm を守るための取捨）
 - タイプ音 → 入れても将来の設定の奥に opt-in 止まり（既定OFF）
