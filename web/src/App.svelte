@@ -1,22 +1,41 @@
 <script lang="ts">
-  // App root — placeholder UI (Wave W1.1 / Task W1.1)
-  // Editor UI, repository wiring, and state management will be added in later waves.
-  // Do NOT import core here — that wiring is done in Wave W1.1 (after Task C2.4).
+  import { onMount } from 'svelte'
+  import { AppState } from './state/appState.svelte'
+  import Editor from './editor/Editor.svelte'
+  import ManuscriptList from './list/ManuscriptList.svelte'
+
+  const app = new AppState()
+
+  onMount(() => {
+    void app.init()
+  })
 </script>
 
-<main>
+<header class="app-header">
   <h1>noveditor</h1>
-  <p>（エディタ UI は後続 Wave で実装されます）</p>
-</main>
+</header>
+
+<div class="layout">
+  <ManuscriptList {app} />
+  <Editor {app} />
+</div>
 
 <style>
-  main {
-    padding: 2rem;
-    font-family: sans-serif;
+  .app-header {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #ddd;
   }
-
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+  .app-header h1 {
+    font-size: 1.2rem;
+    margin: 0;
+  }
+  .layout {
+    display: flex;
+    align-items: stretch;
+    min-height: calc(100vh - 3rem);
+  }
+  :global(body) {
+    margin: 0;
+    font-family: system-ui, -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
   }
 </style>
