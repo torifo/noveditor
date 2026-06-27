@@ -2,7 +2,11 @@ import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // GitHub Pages serves this project repo at /noveditor/. Production builds use that
+  // base so asset URLs and the PWA (start_url / scope / SW scope, all derived from
+  // Vite's base) resolve under the subpath; dev stays at '/'.
+  base: command === 'build' ? '/noveditor/' : '/',
   plugins: [
     svelte(),
     VitePWA({
@@ -47,4 +51,4 @@ export default defineConfig({
       },
     }),
   ],
-})
+}))
