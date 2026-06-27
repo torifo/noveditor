@@ -16,6 +16,13 @@
   let titleEl = $state<HTMLInputElement | null>(null)
   let bodyEl = $state<HTMLTextAreaElement | null>(null)
 
+  // Per-話(episode) notes: お知らせ(前書き) / あとがき(後書き). Local show flags drive the quiet
+  // ＋ affordance while a note is empty; element refs let the ＋ button drop the caret in.
+  let foreEl = $state<HTMLTextAreaElement | null>(null)
+  let afterEl = $state<HTMLTextAreaElement | null>(null)
+  let showFore = $state(false)
+  let showAfter = $state(false)
+
   // 編集 ⇄ プレビュー (ruby) view mode — editor-local, resets to edit on reload.
   let mode = $state<'edit' | 'preview'>('edit')
 
@@ -28,7 +35,7 @@
   let baselineId: string | null = null
   const sessionDelta = $derived(stats.charCount - sessionBaseline)
   const sessionLabel = $derived(
-    `${sessionDelta >= 0 ? '＋' : '−'}${Math.abs(sessionDelta).toLocaleString()}字`,
+    `${sessionDelta >= 0 ? '＋' : '−'}${Math.abs(sessionDelta).toLocaleString()}文字`,
   )
 
   function prefersReducedMotion(): boolean {
@@ -93,6 +100,18 @@
     })
   })
 
+  // Reset the per-話 note affordances when the episode changes. An empty note starts collapsed
+  // (the ＋ affordance); a note that already carries text starts expanded, so clearing it
+  // mid-edit keeps the field mounted (collapse is owned by the blur handler in BOTH cases).
+  let notesEpisodeId: string | null = null
+  $effect(() => {
+    const id = app.currentEpisodeId
+    if (id === notesEpisodeId) return
+    notesEpisodeId = id
+    showFore = untrack(() => app.foreNote.length > 0)
+    showAfter = untrack(() => app.afterNote.length > 0)
+  })
+
   function persistPos(): void {
     const id = app.currentEpisodeId
     const el = bodyEl
@@ -150,6 +169,25 @@
     app.markEdited()
   }
 
+  // Reveal a collapsed note and drop the caret into it (queueMicrotask lets the textarea mount).
+  function openFore() {
+    showFore = true
+    queueMicrotask(() => foreEl?.focus())
+  }
+  function openAfter() {
+    showAfter = true
+    queueMicrotask(() => afterEl?.focus())
+  }
+
+  // On blur, gently collapse a blank note back to the ＋ affordance (trim, to match the preview's
+  // whitespace-only handling — a spaces-only note shouldn't keep the field open).
+  function collapseForeIfEmpty() {
+    if (app.foreNote.trim().length === 0) showFore = false
+  }
+  function collapseAfterIfEmpty() {
+    if (app.afterNote.trim().length === 0) showAfter = false
+  }
+
   // Body edits also drive typewriter scrolling (when enabled, and not mid-IME-composition).
   function onBodyInput() {
     app.markEdited()
@@ -181,7 +219,7 @@
     dirty: '未保存',
     saving: '保存中…',
     saved: '保存済み',
-    error: 'エラー',
+    error: '保存できません',
   }
 </script>
 
@@ -192,6 +230,7 @@
       <h2>最初の小説を始めましょう</h2>
       <p>静かな紙の上で、思いついた一行から書き始められます。一話完結でも、連載でも。</p>
       <button class="cta" onclick={beginFirstDraft}>最初の小説を始める</button>
+      <p class="empty-hint">右上の <kbd>?</kbd> から、いつでも使い方を確認できます。</p>
     </div>
   {:else}
     {#if !settings.focusMode}
@@ -219,7 +258,14 @@
     {/if}
 
     {#if mode === 'preview'}
-      <Preview body={app.body} title={app.title} />
+      <Preview
+        body={app.body}
+        title={app.title}
+        foreNote={app.foreNote}
+        afterNote={app.afterNote}
+        novelForeNote={app.novelForeNote}
+        novelAfterNote={app.novelAfterNote}
+      />
     {:else}
       <div class="page">
         <input
@@ -233,6 +279,25 @@
           oncompositionstart={onCompositionStart}
           oncompositionend={onCompositionEnd}
         />
+
+        {#if app.hasEpisode}
+          {#if app.foreNote.length > 0 || showFore}
+            <div class="note note-fore">
+              <span class="note-caption">お知らせ</span>
+              <textarea
+                class="note-area"
+                aria-label="お知らせ（前書き）"
+                placeholder="この話の冒頭に表示（お知らせ・前書き）"
+                bind:this={foreEl}
+                bind:value={app.foreNote}
+                oninput={() => app.markEdited()}
+                onblur={collapseForeIfEmpty}
+              ></textarea>
+            </div>
+          {:else}
+            <button class="note-add note-add-fore" type="button" onclick={openFore}>＋ お知らせ</button>
+          {/if}
+        {/if}
 
         {#if app.errorMessage}
           <p class="error" role="alert">{app.errorMessage}</p>
@@ -250,6 +315,25 @@
           oncompositionstart={onCompositionStart}
           oncompositionend={onCompositionEnd}
         ></textarea>
+
+        {#if app.hasEpisode}
+          {#if app.afterNote.length > 0 || showAfter}
+            <div class="note note-after">
+              <span class="note-caption">あとがき</span>
+              <textarea
+                class="note-area"
+                aria-label="あとがき（後書き）"
+                placeholder="この話の末尾に表示（あとがき）"
+                bind:this={afterEl}
+                bind:value={app.afterNote}
+                oninput={() => app.markEdited()}
+                onblur={collapseAfterIfEmpty}
+              ></textarea>
+            </div>
+          {:else}
+            <button class="note-add" type="button" onclick={openAfter}>＋ あとがき</button>
+          {/if}
+        {/if}
       </div>
     {/if}
   {/if}
@@ -268,8 +352,8 @@
         >
           {sessionLabel}
         </button>
-        <span class="count-sub hide-narrow">空白除く {stats.charCountNoWhitespace.toLocaleString()}</span>
-        <span class="count-sub hide-narrow">{stats.lineCount.toLocaleString()} 行</span>
+        <span class="count-sub hide-narrow">空白を除いて {stats.charCountNoWhitespace.toLocaleString()}文字</span>
+        <span class="count-sub hide-narrow">{stats.lineCount.toLocaleString()}行</span>
       </div>
 
       <div class="save-area">
@@ -422,6 +506,70 @@
     outline: none;
   }
 
+  /* ---- Per-話 notes: お知らせ(前書き) / あとがき(後書き) — quiet, secondary to 本文 ---- */
+  .note {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-left: var(--space-3);
+    border-left: 2px solid var(--line-strong);
+  }
+  .note-fore {
+    margin-bottom: var(--space-4);
+  }
+  .note-after {
+    margin-bottom: var(--space-2);
+  }
+  .note-caption {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--ink-muted);
+  }
+  .note-area {
+    width: 100%;
+    min-height: 3.2rem;
+    border: none;
+    outline: none;
+    resize: vertical;
+    background: transparent;
+    padding: 0;
+    font-family: var(--font-serif);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .note-area::placeholder {
+    color: var(--ink-muted);
+  }
+  .note-area:focus,
+  .note-area:focus-visible {
+    outline: none;
+  }
+  /* Quiet ＋ affordance shown while a note is empty and collapsed. */
+  .note-add {
+    align-self: flex-start;
+    padding: var(--space-1) var(--space-2);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--ink-muted);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition:
+      color 0.16s ease,
+      background 0.16s ease;
+  }
+  .note-add-fore {
+    margin-bottom: var(--space-4);
+  }
+  .note-add:hover {
+    color: var(--accent-strong);
+    background: var(--surface-sunken);
+  }
+
   .error {
     color: var(--danger);
     font-size: 0.85rem;
@@ -483,6 +631,23 @@
   .cta:active {
     transform: scale(0.98);
   }
+  .empty-hint {
+    margin-top: var(--space-3);
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+  }
+  .empty-hint kbd {
+    display: inline-block;
+    min-width: 1.4rem;
+    padding: 0.05rem 0.35rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    color: var(--ink-soft);
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    text-align: center;
+  }
 
   /* ---- Status bar ---- */
   .statusbar {
@@ -490,7 +655,8 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    padding: var(--space-3) var(--space-5);
+    min-height: var(--statusbar-h);
+    padding: var(--space-2) var(--space-5);
     border-top: 1px solid var(--line);
     background: var(--surface);
   }
