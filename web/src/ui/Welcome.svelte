@@ -36,14 +36,14 @@
     aria-modal="true"
     aria-labelledby="welcome-title"
   >
-    <img class="mark" src="/favicon.svg" alt="" width="44" height="44" />
+    <img class="mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="44" height="44" />
     <h2 class="title" id="welcome-title">ノヴェディタへようこそ</h2>
-    <p class="lead">静かな紙の上で、思いついた一行から書きはじめられます。</p>
+    <p class="lead">小説・ライトノベル・エッセイを書くための、静かなエディタです。</p>
 
     <ul class="tips">
       <li>
         <span class="ico" aria-hidden="true">＋</span>
-        <span>「＋ 新規小説」から書きはじめましょう。話を足せば連載にもなります。</span>
+        <span>「＋ 新規小説」から書きはじめましょう。<br />話を足せば連載にもなります。</span>
       </li>
       <li>
         <span class="ico" aria-hidden="true">✓</span>

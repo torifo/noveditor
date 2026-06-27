@@ -172,7 +172,7 @@
     </button>
 
     <h1 class="wordmark">
-      <img class="mark" src="/favicon.svg" alt="" width="28" height="28" />
+      <img class="mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="28" height="28" />
       <span class="word">ノヴェディタ</span>
     </h1>
 
