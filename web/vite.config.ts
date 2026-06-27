@@ -37,6 +37,13 @@ export default defineConfig({
         // generated precache manifest referencing the app bundle + icons).
         globPatterns: ['**/*.{js,mjs,css,html,svg,png,ico,woff,woff2}'],
       },
+      // Serve a real manifest + service worker during `pnpm dev` so the PWA
+      // (and the install prompt) is testable in development, not only in builds.
+      devOptions: {
+        enabled: true,
+        type: 'module',
+        suppressWarnings: true,
+      },
     }),
   ],
 })
