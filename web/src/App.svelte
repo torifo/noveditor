@@ -6,6 +6,7 @@
   import NovelList from './list/NovelList.svelte'
   import SettingsPanel from './ui/SettingsPanel.svelte'
   import Toast from './ui/Toast.svelte'
+  import UpdateToast from './ui/UpdateToast.svelte'
   import CommandPalette from './ui/CommandPalette.svelte'
   import HelpOverlay from './ui/HelpOverlay.svelte'
   import Welcome from './ui/Welcome.svelte'
@@ -259,6 +260,7 @@
   {/if}
 
   <Toast {app} />
+  <UpdateToast />
 
   {#if paletteOpen}
     <CommandPalette

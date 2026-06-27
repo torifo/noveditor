@@ -6,9 +6,10 @@ export default defineConfig({
   plugins: [
     svelte(),
     VitePWA({
-      // 'autoUpdate': new versions install in the background and take effect on the
-      // next load without a user prompt — appropriate for a single-user local editor.
-      registerType: 'autoUpdate',
+      // 'prompt': a new version waits instead of auto-applying. The app surfaces an
+      // in-app "更新" affordance (UpdateToast) and reloads only when the user chooses,
+      // so writing is never interrupted by an automatic reload.
+      registerType: 'prompt',
       // We register the SW manually from src/main.ts via `virtual:pwa-register`.
       injectRegister: null,
       manifest: {
