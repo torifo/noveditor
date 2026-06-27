@@ -1,6 +1,6 @@
 [日本語](./README.md) ・ [**English**](./README.en.md)
 
-# An Editor Built for Novel Writing (noveditor)
+# Novel & Light-Novel Writing Editor (noveditor)
 
 <!-- tech-stack:start (auto-generated) -->
 <p align="center">

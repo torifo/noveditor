@@ -1,6 +1,6 @@
 [**日本語**](./README.md) ・ [English](./README.en.md)
 
-# 小説執筆に特化したエディタ(noveditor)
+# 小説・ラノベ執筆エディタ(noveditor)
 
 <!-- tech-stack:start (auto-generated) -->
 <p align="center">
