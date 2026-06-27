@@ -9,6 +9,7 @@
   import CommandPalette from './ui/CommandPalette.svelte'
   import HelpOverlay from './ui/HelpOverlay.svelte'
   import Welcome from './ui/Welcome.svelte'
+  import ExportOverlay from './ui/ExportOverlay.svelte'
   import { gotoAdjacentEpisode } from './ui/commands'
 
   // First-run greeting — shown once, then remembered.
@@ -36,9 +37,10 @@
   let isWide = $state(true)
   let sidebarOpen = $state(true)
 
-  // ⌘K command palette + ? help overlay.
+  // ⌘K command palette + ? help overlay + export overlay.
   let paletteOpen = $state(false)
   let helpOpen = $state(false)
+  let exportOpen = $state(false)
 
   function toggleSidebar() {
     sidebarOpen = !sidebarOpen
@@ -242,11 +244,19 @@
         paletteOpen = false
         helpOpen = true
       }}
+      openExport={() => {
+        paletteOpen = false
+        exportOpen = true
+      }}
     />
   {/if}
 
   {#if helpOpen}
     <HelpOverlay onClose={() => (helpOpen = false)} />
+  {/if}
+
+  {#if exportOpen}
+    <ExportOverlay {app} onClose={() => (exportOpen = false)} />
   {/if}
 
   {#if showWelcome}

@@ -10,12 +10,14 @@
     onClose,
     openHelp,
     toggleSidebar,
+    openExport,
   }: {
     app: AppState
     settings: Settings
     onClose: () => void
     openHelp: () => void
     toggleSidebar: () => void
+    openExport: () => void
   } = $props()
 
   let query = $state('')
@@ -26,7 +28,7 @@
   // Commands re-filter synchronously as you type (and re-read enabled()).
   // ctx is built inside the derived closure so it reads the live props.
   const commands = $derived(
-    filterCommands(buildCommands({ app, settings, openHelp, toggleSidebar }), query),
+    filterCommands(buildCommands({ app, settings, openHelp, toggleSidebar, openExport }), query),
   )
 
   // A flat list (commands first, then search hits) so arrow-key navigation spans both groups.

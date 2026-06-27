@@ -24,6 +24,8 @@ export interface CommandContext {
   openHelp: () => void
   /** Show/hide the 小説一覧 sidebar (owned by App.svelte). */
   toggleSidebar: () => void
+  /** Open the export overlay for the current 話 (owned by App.svelte). */
+  openExport: () => void
 }
 
 /** The id of the episode `delta` slots from the current one within the open novel, or null. */
@@ -123,6 +125,13 @@ export function buildCommands(ctx: CommandContext): Command[] {
       label: 'タイプライタースクロールの切り替え',
       keywords: 'typewriter scroll',
       run: () => settings.toggleTypewriter(),
+    },
+    {
+      id: 'export-episode',
+      label: 'この話をエクスポート',
+      keywords: 'export kakuyomu narou alphapolis toukou shuppan 出力 投稿',
+      enabled: () => app.currentEpisodeId !== null,
+      run: () => ctx.openExport(),
     },
     {
       id: 'delete-episode',
