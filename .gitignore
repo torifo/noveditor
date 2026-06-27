@@ -28,6 +28,7 @@ release/
 # --- Node / Vite / Svelte (web) ---
 node_modules/
 dist/
+dev-dist/
 .vite/
 *.local
 .svelte-kit/
