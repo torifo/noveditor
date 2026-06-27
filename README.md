@@ -1,76 +1,74 @@
-# noveditor
+[**日本語**](./README.md) ・ [English](./README.en.md)
 
-> 小説・ライトノベル執筆支援エディタ。「まず書けて、消えない」を最小構成で実現する MVP。
-> A novel / light-novel writing editor. MVP focused on "write first, never lose it."
+# 小説・ラノベ執筆エディタ(noveditor)
 
-Kotlin Multiplatform の共有コアを軸に、Web/PWA を最初のリリースとして公開するモノレポです。
-A monorepo built around a Kotlin Multiplatform shared core, shipping Web/PWA as the first release.
+<!-- tech-stack:start (auto-generated) -->
+<p align="center">
+  <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Svelte-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" alt="Svelte">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
+  <img src="https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA">
+</p>
+<!-- tech-stack:end -->
 
-> 名称・アイコン・テーマ色は **仮**（provisional）。最終決定はユーザー主導で行います。
-> Names, icons, and theme colors are **provisional** and will be finalized later.
+小説・ライトノベルを書くためのエディタ。**「まず書けて、消えない」** を最小構成で実現する。
+保存・文字数・検索などのロジックを **Kotlin Multiplatform** の共有コアに集約し、**Web/PWA** を最初のリリースとして公開するモノレポ。
+**ブラウザだけで完結**し、オフラインでも起動・執筆できる(書いたものは端末内に残り、本文をサーバへ送らない)。
 
-## 構成 / Structure
+> 名称・アイコン・テーマ色は **仮**(provisional)。最終決定はユーザー主導で行う。
 
-3 層分離（コア／アダプタ／将来の MCP）を採用しています。
-A 3-layer split: shared core / platform adapters / (future) MCP.
+## クイックスタート
+```sh
+./gradlew :core:jsBrowserProductionLibraryDistribution   # ① Kotlin コアの JS ライブラリを生成
+cd web && pnpm install && pnpm dev                        # ② Web を起動 → http://localhost:5173/
+```
+`web/` は `core/` のビルド出力(JS ライブラリ)をローカルリンクで消費するため、**必ず core を先にビルド**する。
+
+## コア体験
+- **まず書ける**: 起動して即入力。「小説 → 話(エピソード)」の 2 階層で、思いついた順に書き進められる。
+- **消えない**: 保存は端末内(localStorage)。Repository ラウンドトリップと自己修復を Vitest で担保。
+- **オフライン完結**: PWA としてインストール可能・オフライン起動可能。本文をサーバへ送らない。
+- **執筆に集中**: 文字数/行数カウント・集中モード・紙のような本文テーマ・⌘K コマンドパレット＋全文検索。
+- **お知らせ／あとがき**: 話ごと＋小説共通の冒頭(お知らせ)・末尾(あとがき)を本文と分けて管理(空なら自動で隠す)。
+- **記法エクスポート**: 小説家になろう・カクヨム・アルファポリス向けの記法へ変換し、コピー / `.txt` 出力。
+
+## 構成
+3 層分離(共有コア／プラットフォームアダプタ／将来の MCP)を採用。
 
 | ディレクトリ | 役割 |
 |---|---|
-| `core/` | Kotlin Multiplatform 共有コア。保存モデル・文字数/行数ロジック・Repository port。プラットフォーム非依存。 |
+| `core/` | Kotlin Multiplatform 共有コア。保存モデル・文字数/行数・検索・Repository port。プラットフォーム非依存。 |
 | `web/` | Web/PWA アダプタ。TypeScript + Vite + Svelte 5 + vite-plugin-pwa。`core/` の JS ライブラリを消費。 |
-| `android/` | ネイティブ Android アダプタ（**将来**／次リリース。`core/` を再利用予定）。 |
+| `android/` | ネイティブ Android アダプタ(**将来**／次リリース。`core/` を再利用予定)。 |
 
-- 仕様: [`specs/`](./specs/)（`specs/core/`・`specs/web/`・`specs/android/`）
-- ロードマップ: [`docs/ROADMAP.md`](./docs/ROADMAP.md)
+仕様: [`specs/`](./specs/) ・ ロードマップ: [`docs/ROADMAP.md`](./docs/ROADMAP.md)
 
-## ビルド / 実行手順 / Build & Run
+## スタック
+- **コア**: Kotlin Multiplatform 2.4 ＋ kotlinx.serialization 1.9(Gradle 9.5・JS ライブラリ出力)
+- **Web**: Svelte 5 ＋ Vite 6 ＋ TypeScript 5(パッケージマネージャ: pnpm)
+- **PWA**: vite-plugin-pwa(Workbox)が manifest と Service Worker を自動生成(手書き SW なし・`registerType: autoUpdate`・アプリシェルを precache してオフライン起動)
+- **テスト**: Vitest(Repository ラウンドトリップ・記法エクスポート)
 
-**ビルド順は固定**です。`web/` は `core/` のビルド出力（JS ライブラリ）をローカルリンクで消費するため、必ず core を先にビルドします。
-The build order is fixed: `web/` consumes the core's JS library via a local link, so build the core first.
+## 開発セットアップ
 
-```bash
-# 1) コア（Kotlin/KMP）の JS ライブラリをビルド / build the Kotlin core JS library
-#    出力: core/build/dist/js/productionLibrary/（.mjs + .d.mts）
-./gradlew :core:jsBrowserProductionLibraryDistribution
-
-# 2) Web の依存をインストール / install web dependencies
-cd web && pnpm install
-
-# 3) Web を起動・ビルド・確認 / dev, build, preview, test
-pnpm dev       # 開発サーバ / dev server
-pnpm build     # 本番ビルド（dist/ に manifest.webmanifest + Service Worker を生成）
-pnpm preview   # dist/ を配信して確認 / serve the production build
-pnpm test      # Vitest（Repository ラウンドトリップ・自己修復テスト）
+### 1. ツールチェーン
+```sh
+# 必要: JDK 17+(Gradle 9.5 用) と pnpm
+corepack enable    # pnpm を有効化(未導入の場合)
 ```
 
-> core を変更したら、`web/` で再び消費する前に手順 (1) を再実行してください。
-> Re-run step (1) after any change to `core/` before consuming it from `web/`.
+### 2. ビルドとテスト
+```sh
+./gradlew :core:jsBrowserProductionLibraryDistribution   # ① コア(JS ライブラリ)を先にビルド
+cd web && pnpm install
+pnpm build                                               # 本番ビルド(dist/ に manifest + Service Worker)
+pnpm test                                                # Vitest
+```
 
-## PWA
+> `core/` を変更したら、`web/` で消費する前に ① を再実行する(`pnpm dev -- --force` で取り込み)。
 
-`web/` は `vite-plugin-pwa`（Workbox）で manifest と Service Worker を自動生成します（手書き SW なし）。
-`web/` generates its manifest and service worker via `vite-plugin-pwa` (Workbox) — no hand-written SW.
+> 現在の対象外: 縦書き・書籍 PDF(自作 OSS [tatemd](https://www.npmjs.com/package/tatemd) 連携で将来提供／自前実装しない)、各小説投稿サイトへの自動投稿(公式 API なし・記法変換コピーまで)、ネイティブ Android(次リリース)。
 
-- `registerType: 'autoUpdate'` — 新バージョンはバックグラウンド更新し、次回読み込みで反映。
-- アプリシェル（JS/CSS/HTML/アイコン）を precache し、**オフライン起動**に対応。Kotlin コアは Vite バンドルに同梱され、アプリチャンクの precache でカバーされます。
-- SW 登録は `web/src/main.ts` の `virtual:pwa-register` 経由。
-- アイコン（`web/public/pwa-192.png`・`pwa-512.png`・`maskable-512.png`）は **仮** のプレースホルダ。
-
-完了条件（最初のリリース）: Web が PWA としてインストール可能・オフライン起動でき、「書く → 保存 → 再度開く」が成立すること（[`docs/ROADMAP.md`](./docs/ROADMAP.md)）。
-
-## 技術スタック / Tech Stack
-
-| 層 | 技術 | バージョン |
-|---|---|---|
-| Build (core) | Gradle | 9.5 |
-| Core | Kotlin Multiplatform | 2.4 |
-| Core | kotlinx.serialization | 1.9 |
-| Web | Svelte | 5 |
-| Web | Vite | 6 |
-| Web | vite-plugin-pwa (Workbox) | 0.21 |
-| Web | TypeScript | 5 |
-| Web | パッケージマネージャ / package manager | pnpm |
-
-## ライセンス / License
-
+## ライセンス
 未定 / TBD.
