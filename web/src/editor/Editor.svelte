@@ -229,7 +229,7 @@
     <div class="empty-state nv-enter">
       <div class="mark" aria-hidden="true">N</div>
       <h2>最初の小説を始めましょう</h2>
-      <p>静かな紙の上で、思いついた一行から書き始められます。一話完結でも、連載でも。</p>
+      <p>思いついた一行から、すぐに書き始められます。一話完結でも、連載でも。</p>
       <button class="cta" onclick={beginFirstDraft}>最初の小説を始める</button>
       <p class="empty-hint">右上の <kbd>?</kbd> から、いつでも使い方を確認できます。</p>
     </div>
