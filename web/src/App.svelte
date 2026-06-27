@@ -12,6 +12,7 @@
   import Welcome from './ui/Welcome.svelte'
   import ExportOverlay from './ui/ExportOverlay.svelte'
   import { gotoAdjacentEpisode } from './ui/commands'
+  import { sc } from './ui/shortcut'
 
   // First-run greeting — shown once, then remembered.
   const ONBOARDED_KEY = 'noveditor:onboarded:v1'
@@ -157,7 +158,7 @@
       aria-label={sidebarOpen ? '小説一覧を閉じる' : '小説一覧を開く'}
       aria-expanded={sidebarOpen}
       aria-controls="novel-sidebar"
-      title="小説一覧の表示／非表示 (⌘B)"
+      title={`小説一覧の表示／非表示 (${sc('B')})`}
       onclick={toggleSidebar}
     >
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -181,7 +182,7 @@
         class="tool-btn"
         aria-label="集中モード"
         aria-pressed={settings.focusMode}
-        title="集中モード (⌘\)"
+        title={`集中モード (${sc('\\')})`}
         onclick={() => settings.toggleFocusMode()}
       >
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
@@ -197,7 +198,7 @@
       <button
         class="tool-btn"
         aria-label="エクスポート"
-        title="エクスポート (⌘E)"
+        title={`エクスポート (${sc('E')})`}
         disabled={!app.hasEpisode}
         onclick={() => (exportOpen = true)}
       >

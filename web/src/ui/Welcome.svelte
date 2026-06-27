@@ -2,6 +2,8 @@
   // First-run greeting, shown once (App owns the `noveditor:onboarded:v1` flag). Calm and
   // dismissible — Esc / outside-click / the はじめる button all close it. Mirrors the overlay
   // dismissal pattern used by HelpOverlay / SettingsPanel.
+  import { sc, MOD_ICON } from './shortcut'
+
   let { onClose }: { onClose: () => void } = $props()
 
   let cardEl = $state<HTMLDivElement | null>(null)
@@ -38,7 +40,7 @@
   >
     <img class="mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="44" height="44" />
     <h2 class="title" id="welcome-title">ノヴェディタへようこそ</h2>
-    <p class="lead">小説・ライトノベル・エッセイを書くための、静かなエディタです。</p>
+    <p class="lead">小説・ライトノベル・エッセイを書くことに特化したエディタです。</p>
 
     <ul class="tips">
       <li>
@@ -50,8 +52,8 @@
         <span>書いたそばから、自動で保存されます。</span>
       </li>
       <li>
-        <span class="ico" aria-hidden="true">⌘</span>
-        <span><kbd>⌘K</kbd> で検索と操作、<kbd>?</kbd> でヘルプ、<kbd>☰</kbd> で一覧の開閉。</span>
+        <span class="ico" aria-hidden="true">{MOD_ICON}</span>
+        <span><kbd>{sc('K')}</kbd> で検索と操作、<kbd>?</kbd> でヘルプ、<kbd>☰</kbd> で一覧の開閉。</span>
       </li>
     </ul>
 

@@ -1,20 +1,22 @@
 <script lang="ts">
+  import { sc } from './shortcut'
+
   let { onClose }: { onClose: () => void } = $props()
 
   let cardEl = $state<HTMLDivElement | null>(null)
   let closeEl = $state<HTMLButtonElement | null>(null)
 
   const shortcuts: { key: string; desc: string }[] = [
-    { key: '⌘K', desc: 'コマンドパレット（操作・検索）' },
+    { key: sc('K'), desc: 'コマンドパレット（操作・検索）' },
     { key: '?', desc: 'このヘルプ' },
-    { key: '⌘S', desc: '保存' },
-    { key: '⌘N', desc: '話を追加' },
-    { key: '⌘⇧N', desc: '小説を追加' },
-    { key: '⌘B', desc: '小説一覧の表示／非表示' },
-    { key: '⌘E', desc: 'この話をエクスポート' },
-    { key: '⌘\\', desc: '集中モード' },
-    { key: '⌘⌥↑', desc: '前の話へ' },
-    { key: '⌘⌥↓', desc: '次の話へ' },
+    { key: sc('S'), desc: '保存' },
+    { key: sc('N'), desc: '話を追加' },
+    { key: sc('N', 'shift'), desc: '小説を追加' },
+    { key: sc('B'), desc: '小説一覧の表示／非表示' },
+    { key: sc('E'), desc: 'この話をエクスポート' },
+    { key: sc('\\'), desc: '集中モード' },
+    { key: sc('↑', 'alt'), desc: '前の話へ' },
+    { key: sc('↓', 'alt'), desc: '次の話へ' },
     { key: 'Esc', desc: '閉じる／集中モードを終了' },
   ]
 
@@ -79,7 +81,6 @@
             </div>
           {/each}
         </dl>
-        <p class="note">Windows・Linux では ⌘＝Ctrl、⌥＝Alt、⇧＝Shift</p>
       </section>
 
       <section class="sect">
@@ -103,7 +104,7 @@
           <li>＋ で話を追加できます</li>
           <li>書くと自動で保存されます</li>
           <li>削除しても、画面下の通知の「元に戻す」からすぐに戻せます</li>
-          <li>⌘K でいつでも検索・操作できます</li>
+          <li>{sc('K')} でいつでも検索・操作できます</li>
         </ol>
       </section>
     </div>

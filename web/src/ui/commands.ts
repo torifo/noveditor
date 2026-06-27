@@ -1,5 +1,6 @@
 import type { AppState } from '../state/appState.svelte'
 import type { Settings } from '../state/settings.svelte'
+import { sc } from './shortcut'
 
 /**
  * A single invocable action, shared by the ⌘K command palette and the keyboard shortcuts so the
@@ -53,21 +54,21 @@ export function buildCommands(ctx: CommandContext): Command[] {
     {
       id: 'new-episode',
       label: '話を追加',
-      hint: '⌘N',
+      hint: sc('N'),
       keywords: 'new episode shinki wa add hanashi',
       run: () => app.createEpisode(),
     },
     {
       id: 'new-novel',
       label: '小説を追加',
-      hint: '⌘⇧N',
+      hint: sc('N', 'shift'),
       keywords: 'new novel shinki shousetsu create',
       run: () => app.createNovel(),
     },
     {
       id: 'save',
       label: '保存',
-      hint: '⌘S',
+      hint: sc('S'),
       keywords: 'save hozon',
       enabled: () => app.hasEpisode,
       run: () => app.saveNow(),
@@ -75,7 +76,7 @@ export function buildCommands(ctx: CommandContext): Command[] {
     {
       id: 'next-episode',
       label: '次の話へ',
-      hint: '⌘⌥↓',
+      hint: sc('↓', 'alt'),
       keywords: 'next episode tsugi',
       enabled: () => adjacentEpisodeId(app, 1) !== null,
       run: () => gotoAdjacentEpisode(app, 1),
@@ -83,7 +84,7 @@ export function buildCommands(ctx: CommandContext): Command[] {
     {
       id: 'prev-episode',
       label: '前の話へ',
-      hint: '⌘⌥↑',
+      hint: sc('↑', 'alt'),
       keywords: 'previous episode mae',
       enabled: () => adjacentEpisodeId(app, -1) !== null,
       run: () => gotoAdjacentEpisode(app, -1),
@@ -109,14 +110,14 @@ export function buildCommands(ctx: CommandContext): Command[] {
     {
       id: 'toggle-sidebar',
       label: '小説一覧の表示／非表示',
-      hint: '⌘B',
+      hint: sc('B'),
       keywords: 'sidebar toggle ichiran list hide show',
       run: () => ctx.toggleSidebar(),
     },
     {
       id: 'toggle-focus',
       label: '集中モードの切り替え',
-      hint: '⌘\\',
+      hint: sc('\\'),
       keywords: 'focus mode shuuchuu zen',
       run: () => settings.toggleFocusMode(),
     },
@@ -129,7 +130,7 @@ export function buildCommands(ctx: CommandContext): Command[] {
     {
       id: 'export-episode',
       label: 'この話をエクスポート',
-      hint: '⌘E',
+      hint: sc('E'),
       keywords: 'export kakuyomu narou alphapolis toukou shuppan 出力 投稿',
       enabled: () => app.currentEpisodeId !== null,
       run: () => ctx.openExport(),

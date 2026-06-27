@@ -6,6 +6,7 @@
   import { loadPos, savePos } from '../state/positionStore'
   import { centerCaret } from './typewriter'
   import Preview from './Preview.svelte'
+  import { sc } from '../ui/shortcut'
 
   let { app, settings }: { app: AppState; settings: Settings } = $props()
 
@@ -362,7 +363,7 @@
           <span class="dot" aria-hidden="true"></span>
           <span class="save-label">{statusLabel[app.saveStatus]}</span>
         </span>
-        <button class="save" onclick={() => app.saveNow()} title="保存 (⌘S)">保存</button>
+        <button class="save" onclick={() => app.saveNow()} title={`保存 (${sc('S')})`}>保存</button>
       </div>
     </footer>
   {/if}
