@@ -41,6 +41,10 @@ data class Novel(
     val episodeOrder: List<EpisodeId>,
     val createdAt: Long,
     val updatedAt: Long,
+    /** 小説共通の前書き（お知らせ）。全話の本文前に表示。空＝非表示。 */
+    val foreNote: String = "",
+    /** 小説共通の後書き（あとがき）。全話の本文後に表示。空＝非表示。 */
+    val afterNote: String = "",
 )
 
 /**
@@ -58,6 +62,10 @@ data class Episode(
     val body: String,
     val createdAt: Long,
     val updatedAt: Long,
+    /** 話ごとの前書き（お知らせ）。本文前に表示。空＝非表示。 */
+    val foreNote: String = "",
+    /** 話ごとの後書き（あとがき）。本文後に表示。空＝非表示。 */
+    val afterNote: String = "",
 )
 
 /**

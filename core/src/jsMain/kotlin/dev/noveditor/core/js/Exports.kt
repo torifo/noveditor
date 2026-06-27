@@ -58,6 +58,9 @@ data class Novel(
     val episodeOrder: Array<String>,
     val createdAt: Double,
     val updatedAt: Double,
+    // 小説共通の前書き／後書き（全話の本文前後に表示）。空＝非表示。末尾＋既定値で後方互換。
+    val foreNote: String = "",
+    val afterNote: String = "",
 )
 
 /**
@@ -72,6 +75,9 @@ data class Episode(
     val body: String,
     val createdAt: Double,
     val updatedAt: Double,
+    // 話ごとの前書き（お知らせ）／後書き（あとがき）。空＝非表示。末尾＋既定値で後方互換。
+    val foreNote: String = "",
+    val afterNote: String = "",
 )
 
 /** JS-friendly mirror of [dev.noveditor.core.model.NovelSummary] (list metadata, no bodies). */
