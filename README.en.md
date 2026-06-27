@@ -1,6 +1,6 @@
 [日本語](./README.md) ・ [**English**](./README.en.md)
 
-# Novel & Light-Novel Writing Editor (noveditor)
+# An Editor Built for Novel Writing (noveditor)
 
 <!-- tech-stack:start (auto-generated) -->
 <p align="center">
@@ -12,7 +12,8 @@
 </p>
 <!-- tech-stack:end -->
 
-An editor for writing novels and light novels, built around one idea: **"write first, never lose it."**
+A writing editor **built for prose** — novels, light novels, and essays.
+Rather than a general-purpose text editor, it is **focused on the act of writing** itself.
 Save, word-count, and search logic live in a shared **Kotlin Multiplatform** core; **Web/PWA** ships as the first release.
 It runs **entirely in the browser** and works offline — what you write stays on your device, and no text is sent to a server.
 
@@ -26,7 +27,7 @@ cd web && pnpm install && pnpm dev                        # 2) start the web app
 `web/` consumes the core's build output (a JS library) via a local link, so **build the core first**.
 
 ## Core experience
-- **Write immediately**: open and type. A two-level "novel → episode" structure lets you write in any order.
+- **Structure for novels**: a two-level "novel → episode" model manages long works; write in any order.
 - **Never lose it**: storage is on-device (localStorage); repository round-trip and self-repair are covered by Vitest.
 - **Offline-complete**: installable as a PWA, launches offline, and never sends your text to a server.
 - **Stay focused**: character/line counts, focus mode, a paper-like reading theme, and a ⌘K command palette with full-text search.
@@ -71,4 +72,4 @@ pnpm test                                                # Vitest
 > Out of scope for now: vertical writing / book PDF (planned via the author's OSS [tatemd](https://www.npmjs.com/package/tatemd) — not reimplemented here), auto-posting to novel sites (no official API — export stops at markup-converted copy), native Android (next release).
 
 ## License
-TBD.
+[MIT](./LICENSE) © 2026 torifo
