@@ -5,7 +5,7 @@ import {
   type NovelSummary,
 } from 'noveditor-core'
 import { LocalStorageNovelRepository } from '../repository/LocalStorageNovelRepository'
-import type { NovelRepository } from '../repository/NovelRepository'
+import type { EpisodeSearchHit, NovelRepository } from '../repository/NovelRepository'
 import { runNovelEpisodeMigration } from '../repository/migration'
 import { Debouncer } from './autosave'
 import { createEpisode, createNovel } from './novelFactory'
@@ -41,10 +41,16 @@ export class AppState {
   // Current novel meta (for the breadcrumb + novel-title editing).
   novelTitle = $state('')
   novelSynopsis = $state('')
+  // 小説共通のお知らせ（冒頭）／あとがき（末尾）— 全話の本文前後に表示。
+  novelForeNote = $state('')
+  novelAfterNote = $state('')
 
   // Editing buffer for the current 話 (never discarded on save failure).
   title = $state('')
   body = $state('')
+  // 話ごとのお知らせ（冒頭）／あとがき（末尾）。
+  foreNote = $state('')
+  afterNote = $state('')
   private episodeCreatedAt = 0
 
   saveStatus = $state<SaveStatus>('idle')
@@ -86,7 +92,7 @@ export class AppState {
       await runNovelEpisodeMigration(this.repo)
     } catch (e) {
       // Migration failure is non-fatal: keep the (possibly empty) novel list and notify.
-      this.fail('既存原稿の移行に失敗しました。データは保持されています。', e)
+      this.fail('既存データの移行に失敗しました。データは保持されています。', e)
     }
     await this.refreshNovels()
     const latest = this.latestNovel()
@@ -126,8 +132,12 @@ export class AppState {
     this.episodes = []
     this.novelTitle = ''
     this.novelSynopsis = ''
+    this.novelForeNote = ''
+    this.novelAfterNote = ''
     this.title = ''
     this.body = ''
+    this.foreNote = ''
+    this.afterNote = ''
     this.episodeCreatedAt = 0
     this.saveStatus = 'idle'
     this.errorMessage = null
@@ -155,7 +165,16 @@ export class AppState {
     if (episodeId === null || novelId === null) return
     this.saveStatus = 'saving'
     const now = Date.now()
-    const episode = new Episode(episodeId, novelId, this.title, this.body, this.episodeCreatedAt, now)
+    const episode = new Episode(
+      episodeId,
+      novelId,
+      this.title,
+      this.body,
+      this.episodeCreatedAt,
+      now,
+      this.foreNote,
+      this.afterNote,
+    )
     try {
       await this.repo.saveEpisode(episode)
       await this.touchNovel(novelId, now)
@@ -182,6 +201,8 @@ export class AppState {
       novel.episodeOrder,
       novel.createdAt,
       now,
+      novel.foreNote,
+      novel.afterNote,
     )
     await this.repo.saveNovel(next)
     if (novelId === this.currentNovelId) this.novelTitle = novelTitle
@@ -211,6 +232,8 @@ export class AppState {
       this.currentNovelId = novel.id
       this.novelTitle = novel.title
       this.novelSynopsis = novel.synopsis
+      this.novelForeNote = novel.foreNote
+      this.novelAfterNote = novel.afterNote
       await this.refreshEpisodes(novel.id)
       const target = this.defaultEpisodeId()
       if (target) {
@@ -221,6 +244,8 @@ export class AppState {
         this.currentEpisodeId = null
         this.title = ''
         this.body = ''
+        this.foreNote = ''
+        this.afterNote = ''
         this.episodeCreatedAt = 0
         this.saveStatus = 'idle'
       }
@@ -260,6 +285,8 @@ export class AppState {
           this.currentEpisodeId = null
           this.title = ''
           this.body = ''
+          this.foreNote = ''
+          this.afterNote = ''
           this.episodeCreatedAt = 0
           this.saveStatus = 'idle'
         }
@@ -269,6 +296,8 @@ export class AppState {
       this.currentEpisodeId = ep.id
       this.title = ep.title
       this.body = ep.body
+      this.foreNote = ep.foreNote
+      this.afterNote = ep.afterNote
       this.episodeCreatedAt = ep.createdAt
       this.saveStatus = 'idle'
       this.errorMessage = null
@@ -299,6 +328,8 @@ export class AppState {
       this.currentNovelId = novel.id
       this.novelTitle = novel.title
       this.novelSynopsis = novel.synopsis
+      this.novelForeNote = novel.foreNote
+      this.novelAfterNote = novel.afterNote
       await this.refreshEpisodes(novel.id)
       await this.loadEpisodeInto(episode.id)
       this.requestFocus('title')
@@ -332,6 +363,8 @@ export class AppState {
         [...novel.episodeOrder, episode.id],
         novel.createdAt,
         Date.now(),
+        novel.foreNote,
+        novel.afterNote,
       )
       await this.repo.saveEpisode(episode)
       await this.repo.saveNovel(next)
@@ -365,6 +398,8 @@ export class AppState {
         order,
         novel.createdAt,
         Date.now(),
+        novel.foreNote,
+        novel.afterNote,
       )
       await this.repo.saveNovel(next)
       await this.refreshNovels()
@@ -396,6 +431,8 @@ export class AppState {
         order,
         novel.createdAt,
         Date.now(),
+        novel.foreNote,
+        novel.afterNote,
       )
       await this.repo.saveNovel(next)
       await this.refreshNovels()
@@ -405,24 +442,63 @@ export class AppState {
     }
   }
 
-  // ---- Novel meta editing ----
+  // ---- Search (⌘K command palette) ----
 
-  /** Fetch a novel's editable meta (title + synopsis), reading the body for non-current novels. */
-  async getNovelMeta(novelId: string): Promise<{ title: string; synopsis: string }> {
-    if (novelId === this.currentNovelId) {
-      return { title: this.novelTitle, synopsis: this.novelSynopsis }
-    }
+  /** Full-text search across all novels' episodes (delegates to the repo). `[]` on blank/failure. */
+  async search(query: string): Promise<EpisodeSearchHit[]> {
     try {
-      const novel = await this.repo.loadNovel(novelId)
-      return { title: novel?.title ?? '', synopsis: novel?.synopsis ?? '' }
+      return await this.repo.searchEpisodes(query)
     } catch (e) {
-      this.fail('小説情報の読み込みに失敗しました', e)
-      return { title: '', synopsis: '' }
+      // A failed search must not flip the save indicator to an error state.
+      console.error('[noveditor] 検索に失敗しました', e)
+      return []
     }
   }
 
-  /** Update the current (or given) novel's title/synopsis. */
-  async updateNovelMeta(novelId: string, title: string, synopsis: string): Promise<void> {
+  /** Jump to any episode (opens its parent novel first when it's not the current one). */
+  async goToEpisode(novelId: string, episodeId: string): Promise<void> {
+    if (novelId !== this.currentNovelId) {
+      await this.openNovel(novelId)
+    }
+    await this.openEpisode(episodeId)
+  }
+
+  // ---- Novel meta editing ----
+
+  /** Fetch a novel's editable meta (title + synopsis), reading the body for non-current novels. */
+  async getNovelMeta(
+    novelId: string,
+  ): Promise<{ title: string; synopsis: string; foreNote: string; afterNote: string }> {
+    if (novelId === this.currentNovelId) {
+      return {
+        title: this.novelTitle,
+        synopsis: this.novelSynopsis,
+        foreNote: this.novelForeNote,
+        afterNote: this.novelAfterNote,
+      }
+    }
+    try {
+      const novel = await this.repo.loadNovel(novelId)
+      return {
+        title: novel?.title ?? '',
+        synopsis: novel?.synopsis ?? '',
+        foreNote: novel?.foreNote ?? '',
+        afterNote: novel?.afterNote ?? '',
+      }
+    } catch (e) {
+      this.fail('小説情報の読み込みに失敗しました', e)
+      return { title: '', synopsis: '', foreNote: '', afterNote: '' }
+    }
+  }
+
+  /** Update the current (or given) novel's title/synopsis/お知らせ/あとがき. */
+  async updateNovelMeta(
+    novelId: string,
+    title: string,
+    synopsis: string,
+    foreNote: string,
+    afterNote: string,
+  ): Promise<void> {
     try {
       const novel = await this.repo.loadNovel(novelId)
       if (novel === null) return
@@ -433,12 +509,16 @@ export class AppState {
         novel.episodeOrder,
         novel.createdAt,
         Date.now(),
+        foreNote,
+        afterNote,
       )
       await this.repo.saveNovel(next)
       await this.refreshNovels()
       if (novelId === this.currentNovelId) {
         this.novelTitle = title
         this.novelSynopsis = synopsis
+        this.novelForeNote = foreNote
+        this.novelAfterNote = afterNote
       }
     } catch (e) {
       this.fail('小説情報の更新に失敗しました', e)
@@ -524,7 +604,7 @@ export class AppState {
     }
     if (novel) {
       this.deletedBackup = { kind: 'novel', novel, episodes }
-      const t = novel.title.trim().length > 0 ? novel.title : '（無題）'
+      const t = novel.title.trim().length > 0 ? novel.title : '（無題の小説）'
       this.toast = { message: `小説「${t}」を削除しました` }
     }
   }
@@ -543,7 +623,16 @@ export class AppState {
           const order = [...novel.episodeOrder]
           order.splice(Math.min(backup.index, order.length), 0, backup.episode.id)
           await this.repo.saveNovel(
-            new Novel(novel.id, novel.title, novel.synopsis, order, novel.createdAt, Date.now()),
+            new Novel(
+              novel.id,
+              novel.title,
+              novel.synopsis,
+              order,
+              novel.createdAt,
+              Date.now(),
+              novel.foreNote,
+              novel.afterNote,
+            ),
           )
         }
         await this.refreshNovels()

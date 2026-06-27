@@ -1,6 +1,6 @@
 import { Episode, EpisodeSummary, Novel, NovelSummary } from 'noveditor-core'
 import { RepositoryError } from './ManuscriptRepository'
-import type { NovelRepository } from './NovelRepository'
+import type { EpisodeSearchHit, NovelRepository } from './NovelRepository'
 
 /**
  * `localStorage`-backed {@link NovelRepository} for the 小説(Novel) → 話(Episode) hierarchy.
@@ -38,6 +38,8 @@ interface NovelDto {
   episodeOrder: string[]
   createdAt: number
   updatedAt: number
+  foreNote: string
+  afterNote: string
 }
 
 interface EpisodeDto {
@@ -47,6 +49,8 @@ interface EpisodeDto {
   body: string
   createdAt: number
   updatedAt: number
+  foreNote: string
+  afterNote: string
 }
 
 interface NovelSummaryDto {
@@ -64,11 +68,22 @@ function toNovelDto(n: Novel): NovelDto {
     episodeOrder: [...n.episodeOrder],
     createdAt: n.createdAt,
     updatedAt: n.updatedAt,
+    foreNote: n.foreNote,
+    afterNote: n.afterNote,
   }
 }
 
 function fromNovelDto(dto: NovelDto): Novel {
-  return new Novel(dto.id, dto.title, dto.synopsis, [...dto.episodeOrder], dto.createdAt, dto.updatedAt)
+  return new Novel(
+    dto.id,
+    dto.title,
+    dto.synopsis,
+    [...dto.episodeOrder],
+    dto.createdAt,
+    dto.updatedAt,
+    typeof dto.foreNote === 'string' ? dto.foreNote : '',
+    typeof dto.afterNote === 'string' ? dto.afterNote : '',
+  )
 }
 
 function toEpisodeDto(e: Episode): EpisodeDto {
@@ -79,11 +94,37 @@ function toEpisodeDto(e: Episode): EpisodeDto {
     body: e.body,
     createdAt: e.createdAt,
     updatedAt: e.updatedAt,
+    foreNote: e.foreNote,
+    afterNote: e.afterNote,
   }
 }
 
 function fromEpisodeDto(dto: EpisodeDto): Episode {
-  return new Episode(dto.id, dto.novelId, dto.title, dto.body, dto.createdAt, dto.updatedAt)
+  return new Episode(
+    dto.id,
+    dto.novelId,
+    dto.title,
+    dto.body,
+    dto.createdAt,
+    dto.updatedAt,
+    typeof dto.foreNote === 'string' ? dto.foreNote : '',
+    typeof dto.afterNote === 'string' ? dto.afterNote : '',
+  )
+}
+
+/**
+ * Build a compact body excerpt around a match: ~12 chars before to ~24 chars after the match
+ * index (clamped to bounds). Whitespace/newline runs are collapsed to single spaces, the result
+ * is trimmed, and ellipses mark truncation at either end. Empty body yields an empty snippet.
+ */
+function makeBodySnippet(body: string, matchIndex: number, matchLength: number): string {
+  if (body.length === 0) return ''
+  const start = Math.max(0, matchIndex - 12)
+  const end = Math.min(body.length, matchIndex + matchLength + 24)
+  const excerpt = body.slice(start, end).replace(/\s+/g, ' ').trim()
+  const prefix = start > 0 ? '…' : ''
+  const suffix = end < body.length ? '…' : ''
+  return `${prefix}${excerpt}${suffix}`
 }
 
 function isStringArray(v: unknown): v is string[] {
@@ -372,6 +413,69 @@ export class LocalStorageNovelRepository implements NovelRepository {
     const next: NovelDto = { ...novel, episodeOrder: novel.episodeOrder.filter((x) => x !== id) }
     this.writeNovelDto(next)
     this.upsertIndex(next)
+  }
+
+  // ---- Search ----
+
+  async searchEpisodes(query: string): Promise<EpisodeSearchHit[]> {
+    const needle = query.trim().toLowerCase()
+    if (needle.length === 0) return []
+
+    interface Ranked {
+      hit: EpisodeSearchHit
+      rank: number
+      updatedAt: number
+    }
+    const ranked: Ranked[] = []
+
+    for (const entry of this.readIndex()) {
+      const novel = this.readNovel(entry.id)
+      if (novel === null) continue // self-heal: skip missing novel body
+      const novelTitleMatches = novel.title.toLowerCase().includes(needle)
+
+      for (const epId of novel.episodeOrder) {
+        const ep = this.readEpisode(epId)
+        if (ep === null) continue // self-heal: skip missing episode body
+
+        const titleMatches = ep.title.toLowerCase().includes(needle)
+        const bodyIdx = ep.body.toLowerCase().indexOf(needle)
+        const bodyMatches = bodyIdx >= 0
+        if (!novelTitleMatches && !titleMatches && !bodyMatches) continue
+
+        let matchedIn: EpisodeSearchHit['matchedIn']
+        let rank: number
+        let snippet: string
+        if (novelTitleMatches) {
+          matchedIn = 'novel'
+          rank = 0
+          snippet = novel.title
+        } else if (titleMatches) {
+          matchedIn = 'title'
+          rank = 1
+          snippet = ep.title
+        } else {
+          matchedIn = 'body'
+          rank = 2
+          snippet = makeBodySnippet(ep.body, bodyIdx, needle.length)
+        }
+
+        ranked.push({
+          hit: {
+            novelId: novel.id,
+            episodeId: ep.id,
+            novelTitle: novel.title,
+            episodeTitle: ep.title,
+            matchedIn,
+            snippet,
+          },
+          rank,
+          updatedAt: ep.updatedAt,
+        })
+      }
+    }
+
+    ranked.sort((a, b) => (a.rank !== b.rank ? a.rank - b.rank : b.updatedAt - a.updatedAt))
+    return ranked.map((r) => r.hit)
   }
 
   /** Fallback when an episode body is already gone: scan novels for one referencing the id. */

@@ -7,6 +7,9 @@
   let editingNovelId = $state<string | null>(null)
   let editTitle = $state('')
   let editSynopsis = $state('')
+  // 小説共通の「お知らせ」(全話の冒頭) と「あとがき」(全話の末尾)。
+  let editForeNote = $state('')
+  let editAfterNote = $state('')
 
   function formatDate(ts: number): string {
     return new Date(ts).toLocaleString('ja-JP', {
@@ -18,9 +21,11 @@
     })
   }
 
-  function displayTitle(title: string): string {
-    return title.trim().length > 0 ? title : '（無題）'
+  function displayTitle(title: string, fallback = '（無題）'): string {
+    return title.trim().length > 0 ? title : fallback
   }
+  // 小説名の無題は「（無題の小説）」で区別する（話の無題＝「（無題）」）。
+  const NOVEL_UNTITLED = '（無題の小説）'
 
   // Clicking a novel opens it (and its default 話). A single-話 novel opens that 話 directly
   // (single-novel optimization); a multi-話 novel additionally expands its 話 list.
@@ -58,6 +63,8 @@
     const meta = await app.getNovelMeta(id)
     editTitle = meta.title
     editSynopsis = meta.synopsis
+    editForeNote = meta.foreNote
+    editAfterNote = meta.afterNote
     editingNovelId = id
   }
 
@@ -66,7 +73,7 @@
   }
 
   async function saveEdit(id: string) {
-    await app.updateNovelMeta(id, editTitle, editSynopsis)
+    await app.updateNovelMeta(id, editTitle, editSynopsis, editForeNote, editAfterNote)
     editingNovelId = null
   }
 
@@ -168,6 +175,20 @@
                 rows="2"
                 bind:value={editSynopsis}
               ></textarea>
+              <textarea
+                class="edit-synopsis"
+                placeholder="全話の冒頭に表示（任意）"
+                aria-label="小説のお知らせ"
+                rows="2"
+                bind:value={editForeNote}
+              ></textarea>
+              <textarea
+                class="edit-synopsis"
+                placeholder="全話の末尾に表示（任意）"
+                aria-label="小説のあとがき"
+                rows="2"
+                bind:value={editAfterNote}
+              ></textarea>
               <div class="edit-actions">
                 <button type="button" class="ghost" onclick={cancelEdit}>キャンセル</button>
                 <button type="submit" class="primary">保存</button>
@@ -176,7 +197,7 @@
           {:else}
             <div class="novel-row">
               <button class="open novel-open" onclick={() => onOpenNovel(n.id)}>
-                <span class="t">{displayTitle(n.title)}</span>
+                <span class="t">{displayTitle(n.title, NOVEL_UNTITLED)}</span>
                 <span class="meta">
                   <span class="count">{n.episodeCount}話</span>
                   <span class="d">{formatDate(n.updatedAt)}</span>
@@ -193,7 +214,7 @@
                 <button
                   class="act"
                   onclick={() => startEdit(n.id)}
-                  aria-label={`「${displayTitle(n.title)}」の情報を編集`}
+                  aria-label={`「${displayTitle(n.title, NOVEL_UNTITLED)}」の情報を編集`}
                   title="小説情報を編集"
                 >
                   <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
@@ -203,7 +224,7 @@
                 <button
                   class="act del"
                   onclick={() => onDeleteNovel(n.id)}
-                  aria-label={`「${displayTitle(n.title)}」を削除`}
+                  aria-label={`「${displayTitle(n.title, NOVEL_UNTITLED)}」を削除`}
                   title="小説を削除"
                 >
                   <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">

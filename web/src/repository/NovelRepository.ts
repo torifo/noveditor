@@ -3,6 +3,22 @@ import type { Episode, EpisodeSummary, Novel, NovelSummary } from 'noveditor-cor
 export type { Episode, EpisodeSummary, Novel, NovelSummary }
 
 /**
+ * A single hit from {@link NovelRepository.searchEpisodes}. Powers the ⌘K command palette's
+ * "move/search" results: jumping to an episode by matching its novel title, its own title, or
+ * its body text.
+ */
+export interface EpisodeSearchHit {
+  novelId: string
+  episodeId: string
+  novelTitle: string
+  episodeTitle: string
+  /** Where the query matched, in priority order: novel title → episode title → body. */
+  matchedIn: 'novel' | 'title' | 'body'
+  /** A short excerpt for display: body context around the match, else the matched title. */
+  snippet: string
+}
+
+/**
  * TypeScript mirror of the Kotlin `NovelRepository` port
  * (`dev.noveditor.core.repository.NovelRepository`).
  *
@@ -30,4 +46,12 @@ export interface NovelRepository {
   saveEpisode(episode: Episode): Promise<void>
   /** Remove an episode and drop its id from the parent `Novel.episodeOrder`. No-op if absent. */
   deleteEpisode(id: string): Promise<void>
+
+  /**
+   * Full-text search across ALL novels' episodes: matches on novel title, episode title, and
+   * body. Case-insensitive (ASCII-folded; Japanese matched as substrings). A blank/whitespace
+   * query returns `[]`. Hits are ordered by match priority (novel title → episode title → body),
+   * then by the episode's `updatedAt` (most recent first).
+   */
+  searchEpisodes(query: string): Promise<EpisodeSearchHit[]>
 }

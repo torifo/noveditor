@@ -167,4 +167,198 @@ describe('LocalStorageNovelRepository', () => {
     const repo = new LocalStorageNovelRepository(localStorage)
     expect(await repo.loadNovel('n1')).toBeNull()
   })
+
+  describe('foreNote / afterNote (お知らせ・あとがき)', () => {
+    it('round-trips an episode foreNote/afterNote through save -> load', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(
+        new Episode('e1', 'n1', '第一話', '本文', 1000, 1000, 'お知らせ本文', 'あとがき本文'),
+      )
+
+      const loaded = await repo.loadEpisode('e1')
+      expect(loaded).not.toBeNull()
+      expect(loaded!.foreNote).toBe('お知らせ本文')
+      expect(loaded!.afterNote).toBe('あとがき本文')
+    })
+
+    it('round-trips a novel foreNote/afterNote through save -> load', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveNovel(
+        new Novel('n1', '連載小説', 'あらすじ', [], 1000, 1000, 'お知らせ本文', 'あとがき本文'),
+      )
+
+      const loaded = await repo.loadNovel('n1')
+      expect(loaded).not.toBeNull()
+      expect(loaded!.foreNote).toBe('お知らせ本文')
+      expect(loaded!.afterNote).toBe('あとがき本文')
+    })
+
+    it('episodes created via the 6-arg helper default foreNote/afterNote to empty strings', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(episode('e1', 'n1', '第一話', '本文', 1000, 1000))
+
+      const loaded = await repo.loadEpisode('e1')
+      expect(loaded!.foreNote).toBe('')
+      expect(loaded!.afterNote).toBe('')
+    })
+
+    it('novels created via the 6-arg helper default foreNote/afterNote to empty strings', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveNovel(novel('n1', '連載小説', [], 1000, 1000))
+
+      const loaded = await repo.loadNovel('n1')
+      expect(loaded!.foreNote).toBe('')
+      expect(loaded!.afterNote).toBe('')
+    })
+
+    it('migrates a legacy episode record that lacks foreNote/afterNote (defaults to empty)', async () => {
+      // A record written before お知らせ/あとがき existed: no foreNote/afterNote keys.
+      const legacy = {
+        id: 'e1',
+        novelId: 'n1',
+        title: '第一話',
+        body: '本文',
+        createdAt: 1000,
+        updatedAt: 1000,
+      }
+      localStorage.setItem(`${EPISODE_KEY_PREFIX}e1`, JSON.stringify(legacy))
+
+      const repo = new LocalStorageNovelRepository(localStorage)
+      const loaded = await repo.loadEpisode('e1')
+      expect(loaded).not.toBeNull()
+      expect(loaded!.title).toBe('第一話')
+      expect(loaded!.foreNote).toBe('')
+      expect(loaded!.afterNote).toBe('')
+    })
+
+    it('migrates a legacy novel record that lacks foreNote/afterNote (defaults to empty)', async () => {
+      // A novel body written before お知らせ/あとがき existed: no foreNote/afterNote keys.
+      const legacy = {
+        id: 'n1',
+        title: '連載小説',
+        synopsis: 'あらすじ',
+        episodeOrder: [],
+        createdAt: 1000,
+        updatedAt: 1000,
+      }
+      localStorage.setItem(`${NOVEL_KEY_PREFIX}n1`, JSON.stringify(legacy))
+      // Ensure the index references it so listNovels/loadNovel work as for a real record.
+      localStorage.setItem(
+        NOVELS_INDEX_KEY,
+        JSON.stringify([{ id: 'n1', title: '連載小説', episodeCount: 0, updatedAt: 1000 }]),
+      )
+
+      const repo = new LocalStorageNovelRepository(localStorage)
+      const loaded = await repo.loadNovel('n1')
+      expect(loaded).not.toBeNull()
+      expect(loaded!.title).toBe('連載小説')
+      expect(loaded!.foreNote).toBe('')
+      expect(loaded!.afterNote).toBe('')
+
+      const summaries = await repo.listNovels()
+      expect(summaries.map((s) => s.id)).toEqual(['n1'])
+    })
+  })
+
+  describe('searchEpisodes', () => {
+    it('returns [] for a blank query', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(episode('e1', 'n1', 'タイトル', '本文', 1, 1))
+      await repo.saveNovel(novel('n1', '小説', ['e1'], 1, 1))
+
+      expect(await repo.searchEpisodes('')).toEqual([])
+      expect(await repo.searchEpisodes('   ')).toEqual([])
+    })
+
+    it('matches on body and returns matchedIn: body with a contextual snippet', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(episode('e1', 'n1', 'タイトル', '吾輩は猫である。名前はまだ無い。', 1, 1))
+      await repo.saveNovel(novel('n1', '小説', ['e1'], 1, 1))
+
+      const hits = await repo.searchEpisodes('名前')
+      expect(hits).toHaveLength(1)
+      expect(hits[0].matchedIn).toBe('body')
+      expect(hits[0].episodeId).toBe('e1')
+      expect(hits[0].novelId).toBe('n1')
+      expect(hits[0].novelTitle).toBe('小説')
+      expect(hits[0].episodeTitle).toBe('タイトル')
+      expect(hits[0].snippet).toContain('名前')
+    })
+
+    it('matches on episode title and uses the title as the snippet', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(episode('e1', 'n1', '出会いの章', '関係ない本文', 1, 1))
+      await repo.saveNovel(novel('n1', '小説', ['e1'], 1, 1))
+
+      const hits = await repo.searchEpisodes('出会い')
+      expect(hits).toHaveLength(1)
+      expect(hits[0].matchedIn).toBe('title')
+      expect(hits[0].snippet).toBe('出会いの章')
+    })
+
+    it('matches on novel title for all of its episodes', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(episode('e1', 'n1', 'A', 'aaa', 1, 1))
+      await repo.saveEpisode(episode('e2', 'n1', 'B', 'bbb', 2, 2))
+      await repo.saveNovel(novel('n1', '冒険譚', ['e1', 'e2'], 1, 2))
+
+      const hits = await repo.searchEpisodes('冒険')
+      expect(hits).toHaveLength(2)
+      expect(hits.every((h) => h.matchedIn === 'novel')).toBe(true)
+      expect(hits.every((h) => h.snippet === '冒険譚')).toBe(true)
+    })
+
+    it('is case-insensitive for ASCII text', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(episode('e1', 'n1', 'Chapter', 'Hello world', 1, 1))
+      await repo.saveNovel(novel('n1', 'Story', ['e1'], 1, 1))
+
+      const hits = await repo.searchEpisodes('hello')
+      expect(hits).toHaveLength(1)
+      expect(hits[0].matchedIn).toBe('body')
+      expect(hits[0].snippet.toLowerCase()).toContain('hello')
+    })
+
+    it('matches Japanese substrings inside the body', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(episode('e1', 'n1', '序章', '夜明けの街で', 1, 1))
+      await repo.saveNovel(novel('n1', '小説', ['e1'], 1, 1))
+
+      const hits = await repo.searchEpisodes('明け')
+      expect(hits).toHaveLength(1)
+      expect(hits[0].matchedIn).toBe('body')
+    })
+
+    it('orders title matches before body matches for the same query', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      // e1: query appears in the episode title (priority 'title')
+      await repo.saveEpisode(episode('e1', 'n1', '光の話', '無関係', 5, 5))
+      // e2: query appears only in the body (priority 'body'), more recently updated
+      await repo.saveEpisode(episode('e2', 'n1', '影の話', '遠くに光が見えた', 9, 9))
+      await repo.saveNovel(novel('n1', '物語', ['e1', 'e2'], 1, 9))
+
+      const hits = await repo.searchEpisodes('光')
+      expect(hits.map((h) => h.episodeId)).toEqual(['e1', 'e2'])
+      expect(hits[0].matchedIn).toBe('title')
+      expect(hits[1].matchedIn).toBe('body')
+    })
+
+    it('sorts by updatedAt descending within the same priority', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(episode('old', 'n1', 'A', '魔法の杖', 1, 1))
+      await repo.saveEpisode(episode('new', 'n1', 'B', '魔法の本', 2, 5))
+      await repo.saveNovel(novel('n1', '小説', ['old', 'new'], 1, 5))
+
+      const hits = await repo.searchEpisodes('魔法')
+      expect(hits.map((h) => h.episodeId)).toEqual(['new', 'old'])
+    })
+
+    it('returns [] when nothing matches', async () => {
+      const repo = new LocalStorageNovelRepository(localStorage)
+      await repo.saveEpisode(episode('e1', 'n1', 'タイトル', '本文', 1, 1))
+      await repo.saveNovel(novel('n1', '小説', ['e1'], 1, 1))
+
+      expect(await repo.searchEpisodes('存在しない語')).toEqual([])
+    })
+  })
 })

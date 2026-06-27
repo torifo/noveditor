@@ -6,54 +6,148 @@
   import NovelList from './list/NovelList.svelte'
   import SettingsPanel from './ui/SettingsPanel.svelte'
   import Toast from './ui/Toast.svelte'
+  import CommandPalette from './ui/CommandPalette.svelte'
+  import HelpOverlay from './ui/HelpOverlay.svelte'
+  import Welcome from './ui/Welcome.svelte'
+  import { gotoAdjacentEpisode } from './ui/commands'
+
+  // First-run greeting — shown once, then remembered.
+  const ONBOARDED_KEY = 'noveditor:onboarded:v1'
+  let showWelcome = $state(false)
+
+  function dismissWelcome() {
+    showWelcome = false
+    try {
+      localStorage.setItem(ONBOARDED_KEY, '1')
+    } catch {
+      /* ignore */
+    }
+  }
 
   let { settings }: { settings: Settings } = $props()
 
   const app = new AppState()
 
-  // Mobile-only overlay state for the sidebar (desktop keeps it persistent via CSS).
-  let sidebarOpen = $state(false)
+  // Collapsible sidebar. Below WIDE_QUERY it folds into an off-canvas overlay; above it, it's an
+  // inline panel that can still be folded to give the writing surface the full width. `sidebarOpen`
+  // is seeded from the viewport at mount (open when wide, folded when narrow) and re-seeded whenever
+  // the breakpoint is crossed, so narrowing the window auto-folds it.
+  const WIDE_QUERY = '(min-width: 1024px)'
+  let isWide = $state(true)
+  let sidebarOpen = $state(true)
+
+  // ⌘K command palette + ? help overlay.
+  let paletteOpen = $state(false)
+  let helpOpen = $state(false)
+
+  function toggleSidebar() {
+    sidebarOpen = !sidebarOpen
+  }
+
+  /** True while focus is in a text field — so bare `?` types a character instead of opening help. */
+  function isTypingTarget(e: KeyboardEvent): boolean {
+    const t = e.target as HTMLElement | null
+    if (t === null) return false
+    return t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable
+  }
 
   onMount(() => {
     void app.init()
 
-    // Global keyboard shortcuts:
-    //   Cmd/Ctrl+S  → save,  Cmd/Ctrl+N → new 話 (within current novel),  Cmd/Ctrl+\ → toggle 集中モード.
-    //   Esc (when in focus mode) exits it. All block the browser default where relevant.
+    // Show the first-run greeting once.
+    try {
+      showWelcome = localStorage.getItem(ONBOARDED_KEY) === null
+    } catch {
+      showWelcome = false
+    }
+
+    // Seed + track the sidebar against the viewport: open when wide, folded when narrow, and
+    // re-seed on every breakpoint cross so the editor is prioritized as the window shrinks.
+    const mq = window.matchMedia(WIDE_QUERY)
+    isWide = mq.matches
+    sidebarOpen = mq.matches
+    const onBreakpoint = (e: MediaQueryListEvent) => {
+      isWide = e.matches
+      sidebarOpen = e.matches
+    }
+    mq.addEventListener('change', onBreakpoint)
+
+    // Global keyboard shortcuts. Overlays (palette/help) own their own Esc/outside-click dismissal.
+    //   ⌘K  command palette (toggle)     ?    help (when not typing, no overlay open)
+    //   ⌘S  save                         ⌘N   new 話        ⌘⇧N  new 小説
+    //   ⌘\  集中モード                    ⌘⌥↑/⌘⌥↓  前の話 / 次の話
+    //   Esc exits 集中モード (when no overlay is open).
     function onKeydown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && settings.focusMode) {
+      if (e.key === 'Escape' && settings.focusMode && !paletteOpen && !helpOpen) {
         settings.exitFocusMode()
         return
       }
-      if (!(e.metaKey || e.ctrlKey) || e.altKey) return
-      if (e.key === 's' || e.key === 'S') {
+
+      // Bare ? → help. Ignored while typing or when an overlay is already open (it handles its own keys).
+      if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (isTypingTarget(e) || paletteOpen || helpOpen) return
+        e.preventDefault()
+        helpOpen = true
+        return
+      }
+
+      if (!(e.metaKey || e.ctrlKey)) return
+      const k = e.key.toLowerCase()
+
+      // ⌘K toggles the palette (works everywhere, even while typing).
+      if (k === 'k' && !e.altKey) {
+        e.preventDefault()
+        paletteOpen = !paletteOpen
+        if (paletteOpen) helpOpen = false
+        return
+      }
+
+      // ⌘⌥↑ / ⌘⌥↓ — move between 話 within the open novel.
+      if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        e.preventDefault()
+        void gotoAdjacentEpisode(app, e.key === 'ArrowDown' ? 1 : -1)
+        return
+      }
+      if (e.altKey) return
+
+      if (k === 's') {
         e.preventDefault()
         void app.saveNow()
-      } else if (e.key === 'n' || e.key === 'N') {
+      } else if (k === 'n' && e.shiftKey) {
+        e.preventDefault()
+        void app.createNovel()
+      } else if (k === 'n') {
         e.preventDefault()
         void app.createEpisode()
+      } else if (k === 'b') {
+        e.preventDefault()
+        toggleSidebar()
       } else if (e.key === '\\') {
         e.preventDefault()
         settings.toggleFocusMode()
       }
     }
     window.addEventListener('keydown', onKeydown)
-    return () => window.removeEventListener('keydown', onKeydown)
+    return () => {
+      window.removeEventListener('keydown', onKeydown)
+      mq.removeEventListener('change', onBreakpoint)
+    }
   })
 
-  // After navigating on mobile, fold the overlay away so the editor is visible.
+  // After navigating, fold the sidebar only when narrow (on wide it stays open for quick switching).
   function closeSidebar() {
-    sidebarOpen = false
+    if (!isWide) sidebarOpen = false
   }
 </script>
 
-<div class="app" class:focus-mode={settings.focusMode}>
+<div class="app" class:focus-mode={settings.focusMode} class:sidebar-open={sidebarOpen}>
   <header class="app-header nv-enter" style="--nv-delay: 0ms">
     <button
       class="nav-toggle"
       aria-label={sidebarOpen ? '小説一覧を閉じる' : '小説一覧を開く'}
       aria-expanded={sidebarOpen}
-      onclick={() => (sidebarOpen = !sidebarOpen)}
+      title="小説一覧の表示／非表示 (⌘B)"
+      onclick={toggleSidebar}
     >
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
         <path
@@ -89,17 +183,30 @@
           />
         </svg>
       </button>
+      <button
+        class="tool-btn"
+        aria-label="ヘルプ"
+        title="ヘルプ (?)"
+        onclick={() => (helpOpen = true)}
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7" />
+          <path
+            d="M9.4 9.2a2.6 2.6 0 1 1 3.7 2.4c-.8.4-1.1 1-1.1 1.8"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+          />
+          <circle cx="12" cy="16.6" r="0.9" fill="currentColor" />
+        </svg>
+      </button>
       <SettingsPanel {settings} />
     </div>
   </header>
 
   <div class="layout">
-    {#if sidebarOpen}
-      <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-      <div class="scrim" onclick={closeSidebar}></div>
-    {/if}
-
-    <div class="sidebar nv-enter" class:open={sidebarOpen} style="--nv-delay: 60ms">
+    <div class="sidebar nv-enter" style="--nv-delay: 60ms">
       <NovelList {app} onNavigate={closeSidebar} />
     </div>
 
@@ -124,6 +231,27 @@
   {/if}
 
   <Toast {app} />
+
+  {#if paletteOpen}
+    <CommandPalette
+      {app}
+      {settings}
+      {toggleSidebar}
+      onClose={() => (paletteOpen = false)}
+      openHelp={() => {
+        paletteOpen = false
+        helpOpen = true
+      }}
+    />
+  {/if}
+
+  {#if helpOpen}
+    <HelpOverlay onClose={() => (helpOpen = false)} />
+  {/if}
+
+  {#if showWelcome}
+    <Welcome onClose={dismissWelcome} />
+  {/if}
 </div>
 
 <style>
@@ -170,8 +298,9 @@
     color: var(--ink);
   }
 
+  /* Sidebar toggle — available at every width so the editor can always take the full canvas. */
   .nav-toggle {
-    display: none;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 2.25rem;
@@ -180,9 +309,11 @@
     border-radius: var(--radius-sm);
     background: var(--surface);
     color: var(--ink-soft);
+    flex-shrink: 0;
   }
   .nav-toggle:hover {
     background: var(--surface-sunken);
+    color: var(--ink);
   }
 
   /* Right-aligned header controls: 集中モード toggle + 設定 gear. */
@@ -265,14 +396,27 @@
     overflow-y: auto;
   }
 
+  /*
+   * The sidebar is an INLINE panel that pushes the editor at EVERY width — it never overlaps or
+   * hides the writing surface. Folding collapses it to zero width so the editor takes the whole
+   * canvas. (Below WIDE_QUERY it simply defaults to folded; the editor is always prioritized.)
+   */
+  .sidebar {
+    transition:
+      width 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.18s ease;
+  }
+  .app:not(.sidebar-open) .sidebar {
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    border-right-color: transparent;
+  }
+
   .main {
     flex: 1;
     min-width: 0;
     display: flex;
-  }
-
-  .scrim {
-    display: none;
   }
 
   /* Staggered entrance honoring per-element delay. */
@@ -280,32 +424,4 @@
     animation-delay: var(--nv-delay, 0ms);
   }
 
-  /* ---- Responsive: collapse the sidebar into an overlay on narrow screens ---- */
-  @media (max-width: 720px) {
-    .nav-toggle {
-      display: inline-flex;
-    }
-    .sidebar {
-      position: fixed;
-      top: var(--header-h);
-      left: 0;
-      bottom: 0;
-      z-index: 25;
-      width: min(80vw, 18rem);
-      transform: translateX(-102%);
-      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-      box-shadow: var(--shadow-lg);
-    }
-    .sidebar.open {
-      transform: translateX(0);
-    }
-    .scrim {
-      display: block;
-      position: fixed;
-      inset: var(--header-h) 0 0 0;
-      z-index: 20;
-      background: rgba(35, 32, 43, 0.28);
-      animation: nv-fade-up 0.2s ease both;
-    }
-  }
 </style>
