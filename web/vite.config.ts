@@ -12,10 +12,9 @@ export default defineConfig({
       // We register the SW manually from src/main.ts via `virtual:pwa-register`.
       injectRegister: null,
       manifest: {
-        // 仮（provisional）: 名称・テーマ色は最終決定前のプレースホルダ。
-        name: 'ノヴェディタ', // 仮
-        short_name: 'Noveditor', // 仮
-        description: '小説・ライトノベル執筆エディタ（MVP）', // 仮
+        name: 'ノヴェディタ',
+        short_name: 'ノヴェディタ',
+        description: '小説・ライトノベルを書くためのエディタ',
         lang: 'ja',
         display: 'standalone',
         theme_color: '#7f52ff',

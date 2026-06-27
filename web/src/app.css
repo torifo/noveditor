@@ -6,14 +6,25 @@
 
 :root {
   /* ---- Palette: warm paper canvas, ink text, sparing Kotlin-purple accent ---- */
-  --paper: #f7f4ee; /* warm ivory page background */
-  --surface: #fcfaf6; /* slightly lighter raised surfaces */
-  --surface-sunken: #f2eee6; /* sunken / hover wells */
+  --paper: #f6f3ec; /* light warm off-white — kept clearly lighter & less yellow than sepia (#f3ead8); paper-ness comes from texture, not tint */
+  --surface: #fdfbf7; /* slightly lighter raised surfaces */
+  --surface-sunken: #f1ece2; /* sunken / hover wells */
   --ink: #23202b; /* primary ink text */
   --ink-soft: #4a4654; /* secondary text (≈8.3:1 on paper) */
   --ink-muted: #6b6675; /* tertiary / meta text — darkened for ≥4.5:1 on paper (≈5.0:1) */
   --line: #e6e0d6; /* hairline warm border */
   --line-strong: #d8d1c4;
+
+  /*
+   * Paper "tooth" — a faint static grain so the writing canvas reads like real paper
+   * (iPad paper-like), not a flat white screen. Offline-only: an inline SVG feTurbulence
+   * baked to very low alpha (no external asset, no JS, works in Chrome/Safari/Firefox).
+   * Tiled on `body`, it shows through the transparent .page/.body writing surface while
+   * opaque chrome (sidebar / statusbar on --surface) stays clean. Inherited by sepia;
+   * disabled in dark.
+   */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.2'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23t)'/%3E%3C/svg%3E");
+  --paper-grain-size: 160px;
 
   --accent: #7f52ff; /* brand Kotlin purple — used sparingly */
   --accent-strong: #6a3df0;
@@ -60,6 +71,7 @@
   --focus-ring-offset: 2px;
 
   --header-h: 3.25rem;
+  --statusbar-h: 3.5rem; /* editor status bar height — toasts sit above this so they never overlap it */
 }
 
 /*
@@ -116,6 +128,8 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.55);
+
+  --paper-grain: none; /* dark mode: skip the tooth — texture on near-black reads as noise */
 }
 
 /* ---- Light base reset ---- */
@@ -133,7 +147,10 @@ body {
 
 body {
   min-height: 100vh;
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: var(--paper-grain, none); /* faint paper tooth; `none` in dark */
+  background-size: var(--paper-grain-size, auto);
+  background-repeat: repeat;
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 16px;

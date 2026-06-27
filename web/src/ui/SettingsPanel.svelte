@@ -21,6 +21,10 @@
     { value: 'dark', label: '夜' },
   ]
 
+  // Line width is stored in rem, but writers think in 文字/行. The column is `lineWidth`rem
+  // (1rem = 16px) and a full-width JP glyph ≈ the editor font size, so chars/line ≈ width/size.
+  const charsPerLine = $derived(Math.round((settings.lineWidth * 16) / settings.fontSize))
+
   function toggle() {
     open = !open
   }
@@ -123,7 +127,7 @@
 
       <section class="group">
         <label class="glabel" for="set-width">
-          行幅 <span class="val">{settings.lineWidth}rem</span>
+          行幅 <span class="val">1行 約{charsPerLine}文字</span>
         </label>
         <input
           id="set-width"
@@ -137,7 +141,7 @@
       </section>
 
       <section class="group row">
-        <label class="glabel" for="set-tw">タイプライター</label>
+        <label class="glabel" for="set-tw">タイプライタースクロール</label>
         <button
           id="set-tw"
           class="switch"

@@ -39,7 +39,8 @@
     position: fixed;
     left: 0;
     right: 0;
-    bottom: var(--space-5);
+    /* Sit clear of the editor status bar at the very bottom, so the toast never covers it. */
+    bottom: calc(var(--statusbar-h) + var(--space-5));
     display: flex;
     justify-content: center;
     padding: 0 var(--space-4);
