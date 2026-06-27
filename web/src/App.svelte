@@ -124,6 +124,9 @@
       } else if (k === 'b') {
         e.preventDefault()
         toggleSidebar()
+      } else if (k === 'e') {
+        e.preventDefault()
+        if (app.hasEpisode) exportOpen = true
       } else if (e.key === '\\') {
         e.preventDefault()
         settings.toggleFocusMode()
@@ -140,14 +143,19 @@
   function closeSidebar() {
     if (!isWide) sidebarOpen = false
   }
+
+  // While a modal overlay is open, make the rest of the app inert so Tab focus can't escape behind
+  // it (aria-modal alone doesn't stop the physical Tab key).
+  const overlayOpen = $derived(paletteOpen || helpOpen || exportOpen || showWelcome)
 </script>
 
 <div class="app" class:focus-mode={settings.focusMode} class:sidebar-open={sidebarOpen}>
-  <header class="app-header nv-enter" style="--nv-delay: 0ms">
+  <header class="app-header nv-enter" style="--nv-delay: 0ms" inert={overlayOpen}>
     <button
       class="nav-toggle"
       aria-label={sidebarOpen ? '小説一覧を閉じる' : '小説一覧を開く'}
       aria-expanded={sidebarOpen}
+      aria-controls="novel-sidebar"
       title="小説一覧の表示／非表示 (⌘B)"
       onclick={toggleSidebar}
     >
@@ -187,6 +195,24 @@
       </button>
       <button
         class="tool-btn"
+        aria-label="エクスポート"
+        title="エクスポート (⌘E)"
+        disabled={!app.hasEpisode}
+        onclick={() => (exportOpen = true)}
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            d="M12 3v11m0-11 -3.5 3.5M12 3l3.5 3.5M5 14v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+      <button
+        class="tool-btn"
         aria-label="ヘルプ"
         title="ヘルプ (?)"
         onclick={() => (helpOpen = true)}
@@ -207,8 +233,8 @@
     </div>
   </header>
 
-  <div class="layout">
-    <div class="sidebar nv-enter" style="--nv-delay: 60ms">
+  <div class="layout" inert={overlayOpen}>
+    <div class="sidebar nv-enter" id="novel-sidebar" inert={!sidebarOpen} style="--nv-delay: 60ms">
       <NovelList {app} onNavigate={closeSidebar} />
     </div>
 
@@ -291,6 +317,7 @@
     margin: 0;
     font-size: 1rem;
     font-weight: 400;
+    -webkit-user-select: none;
     user-select: none;
   }
   .mark {
@@ -356,6 +383,14 @@
     border-color: var(--accent);
     color: var(--accent-strong);
     background: var(--accent-wash);
+  }
+  .tool-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .tool-btn:disabled:hover {
+    background: var(--surface);
+    color: var(--ink-soft);
   }
 
   /* ---- 集中モード (focus mode): hide all chrome, leave only the paper ---- */

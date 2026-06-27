@@ -348,6 +348,7 @@
         <button
           class="count-session"
           onclick={resetSession}
+          aria-label={`このセッションで書いた文字数 ${sessionLabel} — クリックでリセット`}
           title="このセッションで書いた文字数 — クリックでリセット"
         >
           {sessionLabel}

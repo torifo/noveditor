@@ -103,7 +103,7 @@
     letter-spacing: 0.02em;
     color: var(--ink);
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   /* Notes (お知らせ / あとがき): clearly secondary to 本文 — smaller, softer ink, set inside a
@@ -137,7 +137,7 @@
 
   .pv-note-text {
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   /* Ruby tuning: a calm, slightly smaller reading gloss. Shared by 本文 and notes. */
@@ -147,6 +147,7 @@
     color: var(--ink-soft);
     font-weight: 400;
     letter-spacing: 0;
+    -webkit-user-select: none;
     user-select: none;
   }
 

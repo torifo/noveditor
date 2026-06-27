@@ -129,6 +129,7 @@ export function buildCommands(ctx: CommandContext): Command[] {
     {
       id: 'export-episode',
       label: 'この話をエクスポート',
+      hint: '⌘E',
       keywords: 'export kakuyomu narou alphapolis toukou shuppan 出力 投稿',
       enabled: () => app.currentEpisodeId !== null,
       run: () => ctx.openExport(),

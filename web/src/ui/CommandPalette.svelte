@@ -121,12 +121,16 @@
       type="text"
       placeholder="コマンドを実行／本文・タイトルを検索…"
       aria-label="コマンド・検索"
+      role="combobox"
+      aria-expanded="true"
+      aria-controls="cp-results"
+      aria-activedescendant={items.length > 0 ? `cp-item-${activeIndex}` : undefined}
       onkeydown={onInputKeydown}
       autocomplete="off"
       spellcheck="false"
     />
 
-    <div class="results">
+    <div class="results" id="cp-results" role="listbox">
       {#if items.length === 0}
         <p class="empty">見つかりませんでした</p>
       {/if}
@@ -137,6 +141,7 @@
           <!-- svelte-ignore a11y_no_static_element_interactions -->
           <div
             class="row"
+            id={`cp-item-${i}`}
             class:active={activeIndex === i}
             role="option"
             aria-selected={activeIndex === i}
@@ -157,6 +162,7 @@
           <!-- svelte-ignore a11y_no_static_element_interactions -->
           <div
             class="row hit"
+            id={`cp-item-${idx}`}
             class:active={activeIndex === idx}
             role="option"
             aria-selected={activeIndex === idx}

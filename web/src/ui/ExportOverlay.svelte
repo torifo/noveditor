@@ -142,7 +142,7 @@
                 </button>
               </div>
             </div>
-            <textarea class="out note" bind:this={foreEl} readonly rows="3" value={result.foreNote}
+            <textarea class="out note" aria-label="前書き（お知らせ）の書き出し" bind:this={foreEl} readonly rows="3" value={result.foreNote}
             ></textarea>
           </section>
         {/if}
@@ -161,7 +161,7 @@
               <button class="act" onclick={download}>.txt を保存</button>
             </div>
           </div>
-          <textarea class="out body-out" bind:this={bodyEl} readonly rows="10" value={result.body}
+          <textarea class="out body-out" aria-label="本文の書き出し" bind:this={bodyEl} readonly rows="10" value={result.body}
           ></textarea>
         </section>
 
@@ -179,7 +179,7 @@
                 </button>
               </div>
             </div>
-            <textarea class="out note" bind:this={afterEl} readonly rows="3" value={result.afterNote}
+            <textarea class="out note" aria-label="後書き（あとがき）の書き出し" bind:this={afterEl} readonly rows="3" value={result.afterNote}
             ></textarea>
           </section>
         {/if}
