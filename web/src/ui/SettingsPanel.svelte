@@ -7,6 +7,7 @@
     LINE_WIDTH_MIN,
     LINE_WIDTH_MAX,
   } from '../state/settings.svelte'
+  import { pwaInstall } from '../state/pwaInstall.svelte'
 
   let { settings }: { settings: Settings } = $props()
 
@@ -152,6 +153,31 @@
         >
           <span class="knob"></span>
         </button>
+      </section>
+
+      <section class="group">
+        {#if pwaInstall.canInstall}
+          <button class="install" onclick={() => pwaInstall.prompt()}>
+            アプリをインストール
+          </button>
+        {/if}
+
+        <div class="row">
+          <span class="glabel" id="set-mcp">
+            MCP連携 <span class="tag">（追加予定）</span>
+          </span>
+          <button
+            class="switch"
+            role="switch"
+            aria-labelledby="set-mcp"
+            aria-checked="false"
+            aria-disabled="true"
+            disabled
+          >
+            <span class="knob"></span>
+          </button>
+        </div>
+        <span class="caption">外部AIツール連携。公開後に対応予定です。</span>
       </section>
     </div>
   {/if}
@@ -311,5 +337,49 @@
   }
   .switch[aria-checked='true'] .knob {
     left: calc(100% - 1.23rem);
+  }
+  .switch:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* App install (PWA) — calm full-width secondary button */
+  .install {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition:
+      background 0.16s ease,
+      border-color 0.16s ease,
+      color 0.16s ease;
+  }
+  .install:hover {
+    background: var(--surface-sunken);
+  }
+
+  /* Inline row (label + control) inside a column group */
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* MCP placeholder — muted "追加予定" tag + caption */
+  .tag {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-muted);
+  }
+  .caption {
+    font-size: 0.72rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--ink-muted);
   }
 </style>
