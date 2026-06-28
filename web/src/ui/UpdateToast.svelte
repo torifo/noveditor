@@ -26,7 +26,8 @@
 <style>
   .toast-layer {
     position: fixed;
-    left: 0;
+    /* Center within the editor area (right of the sidebar), not the whole viewport. */
+    left: var(--sidebar-w, 0);
     right: 0;
     /* Stack above the undo toast (and clear of the status bar) so the two never overlap. */
     bottom: calc(var(--statusbar-h) + var(--space-5) + 3.5rem);

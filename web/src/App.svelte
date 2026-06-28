@@ -298,6 +298,12 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    /* Mirrors the .sidebar width below (keep the two in sync), exposed as a var so the toast
+       layers can center within the editor area rather than the whole viewport. */
+    --sidebar-w: 16rem;
+  }
+  .app:not(.sidebar-open) {
+    --sidebar-w: 0px;
   }
 
   .app-header {

@@ -37,7 +37,8 @@
 <style>
   .toast-layer {
     position: fixed;
-    left: 0;
+    /* Center within the editor area (right of the sidebar), not the whole viewport. */
+    left: var(--sidebar-w, 0);
     right: 0;
     /* Sit clear of the editor status bar at the very bottom, so the toast never covers it. */
     bottom: calc(var(--statusbar-h) + var(--space-5));
