@@ -524,6 +524,10 @@
       left: 0;
       width: min(16rem, 82vw);
       z-index: 40;
+      /* nv-enter animates `transform` (translateY) with fill:both, which would permanently
+         override the off-canvas translateX below and leave the drawer stuck on-screen. Disable
+         the entrance animation here so the drawer can actually slide in/out and hide when closed. */
+      animation: none;
       transform: translateX(-100%);
       transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
       box-shadow: var(--shadow-lg);
