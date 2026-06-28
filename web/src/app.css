@@ -155,10 +155,14 @@ html,
 body {
   margin: 0;
   padding: 0;
+  /* No page rubber-band on mobile — overscrolling would reveal the paper background below the
+     in-flow footer. The editor body (textarea) still scrolls its own content internally. */
+  overscroll-behavior: none;
 }
 
 body {
   min-height: 100vh;
+  min-height: 100svh; /* match .app: stable small-viewport height so body never exceeds the app shell (which left a paper gap below the footer) */
   background-color: var(--paper);
   background-image: var(--paper-grain, none); /* faint paper tooth; `none` in dark */
   background-size: var(--paper-grain-size, auto);

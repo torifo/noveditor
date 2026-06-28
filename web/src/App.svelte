@@ -308,7 +308,7 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    min-height: 100dvh; /* account for mobile browser UI (address bar) */
+    min-height: 100svh; /* stable small-viewport height: doesn't resize with the mobile address bar, so the in-flow footer never jumps or leaves a gap below it */
     /* Mirrors the .sidebar width below (keep the two in sync), exposed as a var so the toast
        layers can center within the editor area rather than the whole viewport. */
     --sidebar-w: 16rem;

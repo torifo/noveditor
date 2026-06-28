@@ -489,7 +489,7 @@
 
   .body {
     flex: 1;
-    min-height: 40vh;
+    min-height: 40svh; /* svh to match the app shell — avoids tipping the page into overflow on mobile */
     width: 100%;
     border: none;
     outline: none;
