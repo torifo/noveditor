@@ -9,6 +9,8 @@
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
   <img src="https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA">
+  <img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android">
+  <img src="https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose">
 </p>
 <!-- tech-stack:end -->
 
@@ -17,7 +19,9 @@ Rather than a general-purpose text editor, it is **focused on the act of writing
 Save, word-count, and search logic live in a shared **Kotlin Multiplatform** core; **Web/PWA** ships as the first release.
 It runs **entirely in the browser** and works offline — what you write stays on your device, and no text is sent to a server.
 
-> Names, icons, and theme colors are **provisional** and will be finalized later.
+<p align="center">
+  <img src="./docs/screenshot.png" alt="noveditor (Web) screenshot" width="860">
+</p>
 
 ## Quick start
 ```sh
@@ -41,15 +45,16 @@ A 3-layer split: shared core / platform adapters / (future) MCP.
 |---|---|
 | `core/` | Kotlin Multiplatform shared core: storage model, char/line counts, search, repository port. Platform-independent. |
 | `web/` | Web/PWA adapter: TypeScript + Vite + Svelte 5 + vite-plugin-pwa. Consumes the core's JS library. |
-| `android/` | Native Android adapter (**future** / next release; will reuse `core/`). |
+| `android/` | Native Android adapter (**Jetpack Compose**). **v1 implemented** (reuses `core/` via its `jvm()` target; `:android:assembleDebug` passes, unit tests green). Device verification + release pending. |
 
 Specs: [`specs/`](./specs/) · Roadmap: [`docs/ROADMAP.md`](./docs/ROADMAP.md)
 
 ## Stack
 - **Core**: Kotlin Multiplatform 2.4 + kotlinx.serialization 1.9 (Gradle 9.5, JS library output)
 - **Web**: Svelte 5 + Vite 6 + TypeScript 5 (package manager: pnpm)
-- **PWA**: vite-plugin-pwa (Workbox) auto-generates the manifest and service worker (no hand-written SW; `registerType: autoUpdate`; app shell precached for offline launch)
-- **Tests**: Vitest (repository round-trip, markup export)
+- **PWA**: vite-plugin-pwa (Workbox) auto-generates the manifest and service worker (no hand-written SW; `registerType: 'prompt'` — new versions are surfaced and applied via an "Update" action; app shell precached for offline launch)
+- **Android**: Jetpack Compose + Material 3 (AGP 9.2, Compose BOM; reuses `core/` via its `jvm()` target)
+- **Tests**: Vitest (Web/core repository round-trip, markup export) + JUnit (Android repository)
 
 ## Development
 
@@ -69,7 +74,9 @@ pnpm test                                                # Vitest
 
 > After changing `core/`, re-run step 1 before consuming it from `web/` (`pnpm dev -- --force` to pick it up).
 
-> Out of scope for now: vertical writing / book PDF (planned via the author's OSS [tatemd](https://www.npmjs.com/package/tatemd) — not reimplemented here), auto-posting to novel sites (no official API — export stops at markup-converted copy), native Android (next release).
+> **Building Android (v1)** needs `local.properties` (SDK path) and Android Studio's JBR (JDK 21): `JAVA_HOME=<JBR> ./gradlew :android:assembleDebug`. `:android` is only configured when `local.properties` exists, so it never affects the Web Pages CI. See [`specs/android/`](./specs/android/).
+
+> Out of scope for now: vertical writing / book PDF (planned via the author's OSS [tatemd](https://www.npmjs.com/package/tatemd) — not reimplemented here), auto-posting to novel sites (no official API — export stops at markup-converted copy).
 
 ## License
 [MIT](./LICENSE) © 2026 torifo
