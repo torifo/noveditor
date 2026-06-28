@@ -435,6 +435,7 @@
     color: var(--ink-muted);
     font-size: 0.8rem;
     font-weight: 500;
+    white-space: nowrap; /* 「プレビュー」を一行で保つ（狭幅で縦に割れない） */
     transition:
       background 0.16s ease,
       color 0.16s ease;
@@ -805,6 +806,36 @@
     /* Reclaim room for 枚数 + session count on small screens. */
     .hide-narrow {
       display: none;
+    }
+  }
+
+  /* Phones: keep the toolbar + status bar on one line each (no internal wrapping). */
+  @media (max-width: 480px) {
+    .breadcrumb .crumb.novel {
+      max-width: 9ch;
+    }
+    .breadcrumb .crumb.episode {
+      max-width: 12ch;
+    }
+    .statusbar {
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+    }
+    .counts {
+      gap: var(--space-3);
+    }
+    .count-main,
+    .count-sub,
+    .count-session,
+    .save-status,
+    .save {
+      white-space: nowrap;
+    }
+    .save-status {
+      min-width: 0; /* let it size to content instead of reserving 5.5em */
+    }
+    .save-area {
+      gap: var(--space-2);
     }
   }
 </style>

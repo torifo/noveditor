@@ -174,7 +174,9 @@
 
     <h1 class="wordmark">
       <img class="mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="28" height="28" />
-      <span class="word">ノヴェディタ</span>
+      <!-- keep-all forbids mid-word kana breaks; <wbr> is the only allowed break point,
+           so when it must wrap on a narrow screen it splits as ノヴェ / ディタ. -->
+      <span class="word">ノヴェ<wbr />ディタ</span>
     </h1>
 
     <div class="header-tools">
@@ -245,6 +247,14 @@
     </main>
   </div>
 
+  {#if sidebarOpen}
+    <button
+      class="sidebar-backdrop"
+      aria-label="小説一覧を閉じる"
+      onclick={() => (sidebarOpen = false)}
+    ></button>
+  {/if}
+
   {#if settings.focusMode}
     <button class="focus-exit" title="集中モードを終了 (Esc)" onclick={() => settings.exitFocusMode()}>
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -298,6 +308,7 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    min-height: 100dvh; /* account for mobile browser UI (address bar) */
     /* Mirrors the .sidebar width below (keep the two in sync), exposed as a var so the toast
        layers can center within the editor area rather than the whole viewport. */
     --sidebar-w: 16rem;
@@ -337,10 +348,14 @@
     /* favicon.svg already carries its own rounded corners + soft shadow */
   }
   .word {
-    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+    font-family: var(--font-wordmark);
     font-weight: 600;
-    font-size: 1.25rem;
+    /* Fluid: full size on desktop/tablet, gently smaller on phones so it stays one tidy line. */
+    font-size: clamp(1.05rem, 1.5vw + 0.7rem, 1.25rem);
     letter-spacing: 0.08em;
+    line-height: 1.1;
+    /* Keep カタカナ as one unit — never split ノヴェディ / タ mid-word (CJK allows kana breaks). */
+    word-break: keep-all;
     color: var(--ink);
   }
 
@@ -402,6 +417,29 @@
     color: var(--ink-soft);
   }
 
+  /* Phones: compact the chrome so the wordmark isn't cramped between the toggle and the tools. */
+  @media (max-width: 30rem) {
+    .app-header {
+      gap: var(--space-2);
+      padding: 0 var(--space-3);
+    }
+    .nav-toggle,
+    .tool-btn {
+      width: 2rem;
+      height: 2rem;
+    }
+    .mark {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+    .header-tools {
+      gap: var(--space-1);
+    }
+    .word {
+      letter-spacing: 0.04em;
+    }
+  }
+
   /* ---- 集中モード (focus mode): hide all chrome, leave only the paper ---- */
   .app.focus-mode .app-header,
   .app.focus-mode .sidebar {
@@ -451,9 +489,10 @@
   }
 
   /*
-   * The sidebar is an INLINE panel that pushes the editor at EVERY width — it never overlaps or
-   * hides the writing surface. Folding collapses it to zero width so the editor takes the whole
-   * canvas. (Below WIDE_QUERY it simply defaults to folded; the editor is always prioritized.)
+   * ≥1024px (WIDE_QUERY): the sidebar is an INLINE panel that pushes the editor and folds to zero
+   * width so the canvas can take the full width. Below 1024px it becomes an off-canvas DRAWER that
+   * slides over the editor (with a tap-to-close backdrop) — opening 小説一覧 never crushes the
+   * writing surface on a phone. (The script already defaults it folded below WIDE_QUERY.)
    */
   .sidebar {
     transition:
@@ -465,6 +504,61 @@
     opacity: 0;
     overflow: hidden;
     border-right-color: transparent;
+  }
+
+  /* Tap-to-close scrim — only rendered while the drawer is open, only shown below WIDE_QUERY. */
+  .sidebar-backdrop {
+    display: none;
+  }
+
+  @media (max-width: 1023.98px) {
+    .app {
+      /* The drawer overlays rather than pushes, so the editor is always full width
+         (toasts then center on the whole canvas, not a phantom sidebar column). */
+      --sidebar-w: 0px;
+    }
+    .sidebar {
+      position: fixed;
+      top: var(--header-h);
+      bottom: 0;
+      left: 0;
+      width: min(16rem, 82vw);
+      z-index: 40;
+      transform: translateX(-100%);
+      transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: var(--shadow-lg);
+    }
+    .app.sidebar-open .sidebar {
+      transform: translateX(0);
+    }
+    /* Off-canvas hides via transform here, not width — undo the inline-push collapse. */
+    .app:not(.sidebar-open) .sidebar {
+      width: min(16rem, 82vw);
+      opacity: 1;
+      overflow-y: auto;
+      border-right-color: var(--line);
+    }
+    .sidebar-backdrop {
+      display: block;
+      position: fixed;
+      inset: var(--header-h) 0 0 0;
+      z-index: 39;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: rgba(20, 18, 24, 0.34);
+      cursor: pointer;
+      animation: nv-scrim 0.18s ease both;
+    }
+  }
+
+  @keyframes nv-scrim {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   .main {
