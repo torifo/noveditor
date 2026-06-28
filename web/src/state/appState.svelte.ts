@@ -9,6 +9,7 @@ import type { EpisodeSearchHit, NovelRepository } from '../repository/NovelRepos
 import { runNovelEpisodeMigration } from '../repository/migration'
 import { Debouncer } from './autosave'
 import { createEpisode, createNovel } from './novelFactory'
+import { SAMPLE_NOVEL_ID, isSampleEpisode, isSampleNovel, seedSampleNovel } from './sampleNovel'
 
 const AUTOSAVE_DELAY_MS = 800
 
@@ -71,6 +72,11 @@ export class AppState {
   }
 
   /** `true` when a novel is open with at least one episode being edited. */
+  /** The user's own novels — everything except the built-in 使い方 guide. */
+  get userNovels(): NovelSummary[] {
+    return this.novels.filter((n) => n.id !== SAMPLE_NOVEL_ID)
+  }
+
   get hasEpisode(): boolean {
     return this.currentEpisodeId !== null
   }
@@ -94,6 +100,12 @@ export class AppState {
       // Migration failure is non-fatal: keep the (possibly empty) novel list and notify.
       this.fail('既存データの移行に失敗しました。データは保持されています。', e)
     }
+    // Seed the built-in 使い方 guide novel once (best-effort; never blocks startup).
+    try {
+      await seedSampleNovel(this.repo)
+    } catch {
+      /* ignore — the guide simply won't appear this session */
+    }
     await this.refreshNovels()
     const latest = this.latestNovel()
     if (latest) {
@@ -104,8 +116,10 @@ export class AppState {
   }
 
   private latestNovel(): NovelSummary | null {
-    if (this.novels.length === 0) return null
-    return this.novels.reduce((a, b) => (b.updatedAt > a.updatedAt ? b : a))
+    // Exclude the built-in guide so it never auto-opens or counts as the user's latest work.
+    const own = this.novels.filter((n) => n.id !== SAMPLE_NOVEL_ID)
+    if (own.length === 0) return null
+    return own.reduce((a, b) => (b.updatedAt > a.updatedAt ? b : a))
   }
 
   private async refreshNovels(): Promise<void> {
@@ -529,6 +543,10 @@ export class AppState {
 
   /** Delete a 話; if it was current, move to a sibling. Offers an undo toast. */
   async removeEpisode(episodeId: string): Promise<void> {
+    if (isSampleEpisode(episodeId)) {
+      this.toast = { message: 'この使い方サンプルの話は削除できません' }
+      return
+    }
     let novelId = this.currentNovelId
     let backup: Episode | null = null
     let index = -1
@@ -576,6 +594,10 @@ export class AppState {
 
   /** Delete a 小説 and all its 話; if it was current, move to the latest remaining novel. */
   async removeNovel(novelId: string): Promise<void> {
+    if (isSampleNovel(novelId)) {
+      this.toast = { message: 'この使い方サンプルは削除できません' }
+      return
+    }
     let novel: Novel | null = null
     const episodes: Episode[] = []
     try {

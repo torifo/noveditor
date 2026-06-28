@@ -1,6 +1,7 @@
 import type { AppState } from '../state/appState.svelte'
 import type { Settings } from '../state/settings.svelte'
 import { sc } from './shortcut'
+import { SAMPLE_NOVEL_ID } from '../state/sampleNovel'
 
 /**
  * A single invocable action, shared by the ⌘K command palette and the keyboard shortcuts so the
@@ -139,7 +140,7 @@ export function buildCommands(ctx: CommandContext): Command[] {
       id: 'delete-episode',
       label: '現在の話を削除',
       keywords: 'delete episode sakujo remove',
-      enabled: () => app.currentEpisodeId !== null,
+      enabled: () => app.currentEpisodeId !== null && app.currentNovelId !== SAMPLE_NOVEL_ID,
       run: () => {
         const id = app.currentEpisodeId
         if (id !== null) return app.removeEpisode(id)

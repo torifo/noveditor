@@ -154,7 +154,9 @@
     if (count === 0 && prevCount > 0) started = false
     prevCount = count
   })
-  const showEmpty = $derived(app.novels.length === 0 && !started)
+  // The built-in guide is always present, so "empty" means the user has no novels of their own
+  // and nothing is open — then show the CTA (the guide still sits in the list, openable).
+  const showEmpty = $derived(!app.hasEpisode && app.userNovels.length === 0 && !started)
 
   // Breadcrumb: 小説名 › 話タイトル — the current location.
   const novelLabel = $derived(app.novelTitle.trim().length > 0 ? app.novelTitle : '（無題の小説）')

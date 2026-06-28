@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AppState } from '../state/appState.svelte'
+  import { isSampleNovel } from '../state/sampleNovel'
 
   let { app, onNavigate }: { app: AppState; onNavigate?: () => void } = $props()
 
@@ -221,16 +222,18 @@
                     <path d="M4 20h4L18.5 9.5a2 2 0 0 0-2.83-2.83L5 17.2V20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
                   </svg>
                 </button>
-                <button
-                  class="act del"
-                  onclick={() => onDeleteNovel(n.id)}
-                  aria-label={`「${displayTitle(n.title, NOVEL_UNTITLED)}」を削除`}
-                  title="小説を削除"
-                >
-                  <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
-                    <path d="M6 7h12M9 7V5h6v2m-7 0 .7 12.1A1 1 0 0 0 9.7 20h4.6a1 1 0 0 0 1-.9L16 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </button>
+                {#if !isSampleNovel(n.id)}
+                  <button
+                    class="act del"
+                    onclick={() => onDeleteNovel(n.id)}
+                    aria-label={`「${displayTitle(n.title, NOVEL_UNTITLED)}」を削除`}
+                    title="小説を削除"
+                  >
+                    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                      <path d="M6 7h12M9 7V5h6v2m-7 0 .7 12.1A1 1 0 0 0 9.7 20h4.6a1 1 0 0 0 1-.9L16 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                {/if}
               </div>
             </div>
           {/if}
@@ -295,16 +298,18 @@
                         <path d="M6 10l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                       </svg>
                     </button>
-                    <button
-                      class="act del"
-                      onclick={() => onDeleteEpisode(e.id)}
-                      aria-label={`話「${displayTitle(e.title)}」を削除`}
-                      title="話を削除"
-                    >
-                      <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
-                        <path d="M6 7h12M9 7V5h6v2m-7 0 .7 12.1A1 1 0 0 0 9.7 20h4.6a1 1 0 0 0 1-.9L16 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                      </svg>
-                    </button>
+                    {#if !isSampleNovel(n.id)}
+                      <button
+                        class="act del"
+                        onclick={() => onDeleteEpisode(e.id)}
+                        aria-label={`話「${displayTitle(e.title)}」を削除`}
+                        title="話を削除"
+                      >
+                        <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+                          <path d="M6 7h12M9 7V5h6v2m-7 0 .7 12.1A1 1 0 0 0 9.7 20h4.6a1 1 0 0 0 1-.9L16 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </button>
+                    {/if}
                   </div>
                 </li>
               {/each}
