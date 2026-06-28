@@ -1,8 +1,18 @@
 /*
  * noveditor — design tokens & base reset
  * Aesthetic: "a calm editorial writing studio — warm 原稿用紙 (manuscript paper)".
- * Offline-first: system font stacks only (no external/Google webfonts).
+ * Offline-first: system font stacks + one self-hosted subset woff2 for the wordmark (no CDN webfonts).
  */
+
+/* Wordmark only: a self-hosted SUBSET of Shippori Mincho (≈2.5KB — glyphs ノヴェディタ only).
+   Self-hosted (not a CDN link) so the app stays offline-first; bundled & precached by the PWA build. */
+@font-face {
+  font-family: 'Shippori Mincho Wordmark';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/shippori-mincho-wordmark.woff2') format('woff2');
+}
 
 :root {
   /* ---- Palette: warm paper canvas, ink text, sparing Kotlin-purple accent ---- */
@@ -42,6 +52,8 @@
   /* UI chrome — clean gothic */
   --font-sans: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'YuGothic', 'Noto Sans JP',
     system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Wordmark (見出し) — refined Mincho subset, falls back to the serif stack while it loads */
+  --font-wordmark: 'Shippori Mincho Wordmark', var(--font-serif);
 
   --reading-measure: 40rem; /* centered editing column cap (overridable via settings) */
   --editor-font-size: 18px; /* editor body size (overridable via settings, 15–22px) */
