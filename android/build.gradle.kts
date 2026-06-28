@@ -38,10 +38,17 @@ dependencies {
     // Shared Kotlin Multiplatform core (consumed via its JVM target — commonMain is pure Kotlin).
     implementation(project(":core"))
 
+    // core declares kotlinx-serialization-json as `implementation` (non-transitive), so the
+    // app needs its own runtime dep to (de)serialize the core @Serializable models in the repo.
+    implementation(libs.kotlinx.serialization.json)
+
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Pure-JVM unit test for AndroidNovelRepository (no Robolectric — it takes a java.io.File).
+    testImplementation(libs.junit)
 }
