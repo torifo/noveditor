@@ -1,7 +1,7 @@
 /*
  * noveditor — design tokens & base reset
  * Aesthetic: "a calm editorial writing studio — warm 原稿用紙 (manuscript paper)".
- * Offline-first: system font stacks + one self-hosted subset woff2 for the wordmark (no CDN webfonts).
+ * Offline-first: system font stacks + self-hosted woff2 (wordmark subset + the writing body font) — no CDN webfonts.
  */
 
 /* Wordmark only: a self-hosted SUBSET of Shippori Mincho (≈2.5KB — glyphs ノヴェディタ only).
@@ -12,6 +12,17 @@
   font-weight: 600;
   font-display: swap;
   src: url('./assets/fonts/shippori-mincho-wordmark.woff2') format('woff2');
+}
+
+/* Writing body font (本文・話タイトル・お知らせ/あとがき・プレビュー). Self-hosted full Japanese
+   subset (~1MB) so it works offline; Medium (500) — a clean, readable 角ゴシック. Falls back to the
+   system gothic stack while it loads / where unavailable. */
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/zen-kaku-gothic-new-500.woff2') format('woff2');
 }
 
 :root {
@@ -54,6 +65,8 @@
     system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* Wordmark (見出し) — refined Mincho subset, falls back to the serif stack while it loads */
   --font-wordmark: 'Shippori Mincho Wordmark', var(--font-serif);
+  /* Writing body — clean 角ゴシック (Zen Kaku Gothic New 500), falls back to the gothic stack */
+  --font-body: 'Zen Kaku Gothic New', var(--font-sans);
 
   --reading-measure: 40rem; /* centered editing column cap (overridable via settings) */
   --editor-font-size: 18px; /* editor body size (overridable via settings, 15–22px) */

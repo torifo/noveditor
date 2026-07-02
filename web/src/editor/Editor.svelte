@@ -468,9 +468,9 @@
     background: transparent;
     padding: var(--space-2) 0;
     margin-bottom: var(--space-4);
-    font-family: var(--font-serif);
+    font-family: var(--font-body);
     font-size: 1.7rem;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.4;
     color: var(--ink);
     border-bottom: 1px solid transparent;
@@ -496,7 +496,7 @@
     resize: none;
     background: transparent;
     padding: var(--space-2) 0 var(--space-6);
-    font-family: var(--font-serif);
+    font-family: var(--font-body);
     font-size: var(--editor-font-size, 1.12rem);
     line-height: var(--body-line-height);
     letter-spacing: 0.02em;
@@ -540,7 +540,7 @@
     resize: vertical;
     background: transparent;
     padding: 0;
-    font-family: var(--font-serif);
+    font-family: var(--font-body);
     font-size: 0.9rem;
     line-height: 1.7;
     color: var(--ink-soft);

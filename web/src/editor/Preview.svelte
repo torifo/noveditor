@@ -86,9 +86,9 @@
   }
 
   .pv-title {
-    font-family: var(--font-serif);
+    font-family: var(--font-body);
     font-size: 1.7rem;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.4;
     color: var(--ink);
     padding: var(--space-2) 0;
@@ -97,7 +97,7 @@
   }
 
   .pv-body {
-    font-family: var(--font-serif);
+    font-family: var(--font-body);
     font-size: var(--editor-font-size, 1.12rem);
     line-height: var(--body-line-height);
     letter-spacing: 0.02em;
@@ -110,7 +110,7 @@
      faint paper-inset box so it reads as supplementary without any loud chrome. Tokens only, so it
      stays calm across 紙 / セピア / 夜. */
   .pv-note {
-    font-family: var(--font-serif);
+    font-family: var(--font-body);
     font-size: 0.9rem;
     line-height: var(--body-line-height);
     color: var(--ink-soft);
@@ -127,7 +127,7 @@
   }
 
   .pv-note-label {
-    font-family: var(--font-serif);
+    font-family: var(--font-body);
     font-size: 0.7rem;
     font-weight: 400;
     letter-spacing: 0.08em;
@@ -163,7 +163,7 @@
   }
 
   .pv-empty {
-    font-family: var(--font-serif);
+    font-family: var(--font-body);
     color: var(--ink-muted);
     font-size: 1rem;
   }
